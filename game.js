@@ -35,78 +35,7 @@ Q.Sprite.extend("Wormhole", {
   }
 });
 
-
-Q.Sprite.extend("QuarterStarfield", {
-  init:function(paramX, paramY, paramSide){
-    this._super({
-      asset:"quarterStarfield.png",
-      x: paramX,
-      y: paramY,
-      yIni: paramY,
-      scale: 0.25,
-      finished: true,
-      d: 400,
-      gravity: 0.01,
-      side: paramSide
-    });
-    if(Math.random() > 0.5 ){
-      this.p.asset = "quarterStarfield2.png";
-    }
-    if(this.p.side == "bottom"){
-      this.p.vy = 180;
-      this.p.angle = 0;
-    }
-    else if (this.p.side == "top"){
-      this.p.vy = -180;
-      this.p.angle = 180;
-    }
-    else if (this.p.side == "right"){
-      this.p.vx = 180;
-      this.p.angle = -90;
-    }
-    else if (this.p.side == "left"){
-      this.p.vx = -180;
-      this.p.angle = 90;
-    }
-    this.add('2d, animation, tween');
-    this.p.sensor=true;
-    this.animate({angle: this.p.angle});
-    this.animate({scale: 2, opacity: 0.5}, 8);
-    var self = this;
-    setTimeout(function(){
-      self.destroy();
-    }, 8000);
-  },
-  step: function(){    
-  }
-});
-
-Q.Sprite.extend("Vortex", {
-  init:function(paramX, paramY){
-    this._super({
-      asset:"blackhole.png",
-      x: paramX,
-      y: paramY,
-      scale: 0.5,
-      t: 0
-    });
-    this.add('animation, tween');
-    this.p.sensor=true;
-    this.animate({angle: -1000}, 80);
-  },
-  step: function(){
-    var self = this;
-    this.p.t++;
-    if(this.p.t%40 == 0){
-      self.stage.insert(new Q.QuarterStarfield(250, 420, "bottom"));
-      self.stage.insert(new Q.QuarterStarfield(250, 220, "top"));
-      self.stage.insert(new Q.QuarterStarfield(330, 300, "right"));
-      self.stage.insert(new Q.QuarterStarfield(170, 300, "left"));
-      self.stage.insert(new Q.Wormhole(250, 320, "blackhole.png"));
-    }
-  }
-});
-
+// Estas dos son clases para dar un efecto de distorsión del espacio alrededor del Wormhole
 Q.Sprite.extend("exteriorCircularInfluence", {
   init:function(paramX, paramY){
     this._super({
@@ -134,11 +63,81 @@ Q.Sprite.extend("interiorCircularInfluence", {
   }
 });
 
+
+// Clase que representa un lado del campo de estrellas de EventHorizon
+Q.Sprite.extend("QuarterStarfield", {
+  init:function(paramX, paramY, paramSide){
+    this._super({
+      asset:"quarterStarfield.png",
+      x: paramX,
+      y: paramY,
+      scale: 0.25,
+      gravity: 0.01,
+      side: paramSide
+    });
+    if(Math.random() > 0.5 ){
+      this.p.asset = "quarterStarfield2.png";
+    }
+    if(this.p.side == "bottom"){
+      this.p.vy = 180;
+      this.p.angle = 0;
+    }
+    else if (this.p.side == "top"){
+      this.p.vy = -180;
+      this.p.angle = 180;
+    }
+    else if (this.p.side == "right"){
+      this.p.vx = 180;
+      this.p.angle = -90;
+    }
+    else if (this.p.side == "left"){
+      this.p.vx = -180;
+      this.p.angle = 90;
+    }
+    this.add('2d, animation, tween');
+    this.p.sensor=true;
+    this.animate({angle: this.p.angle}); // Rotamos en función del side
+    this.animate({scale: 2, opacity: 0.5}, 8); // Extendemos hacia fuera para dar efecto de túnel
+    var self = this;
+    setTimeout(function(){
+      self.destroy(); // A los 8 segundos muere
+    }, 8000);
+  },
+  step: function(){    
+  }
+});
+
+// Clase
+Q.Sprite.extend("EventHorizon", {
+  init:function(paramX, paramY){
+    this._super({
+      asset:"vortex.png",
+      x: paramX,
+      y: paramY,
+      scale: 1,
+      t: 0 // Factor "tiempo"
+    });
+    this.add('animation, tween');
+    this.p.sensor=true;
+    this.animate({angle: -3000}, 80); // Molaría que diese vueltas en loop
+  },
+  step: function(){
+    this.p.t++;
+    if(this.p.t%80 == 0){ // Cada cierto tiempo creamos nuevos campos de estrellas
+      this.stage.insert(new Q.QuarterStarfield(this.p.x, this.p.y + 100, "bottom"));
+      this.stage.insert(new Q.QuarterStarfield(this.p.x, this.p.y - 100, "top"));
+      this.stage.insert(new Q.QuarterStarfield(this.p.x + 80, this.p.y - 20, "right"));
+      this.stage.insert(new Q.QuarterStarfield(this.p.x - 80, this.p.y - 20, "left"));
+      this.stage.insert(new Q.Wormhole(this.p.x, this.p.y, "blackhole.png"));
+    }
+  }
+});
+
 // Global Quintus variables
 Q.state.set({
-  nPlanet: 1,
-  planets: {
-    1: { x: 540, y: 330, d: 400, r: 60}
+  nPlanet: 1, // Índice del planeta actual, cuando se incremente, creamos el planeta
+  planets: { // Coordenadas, distancia de órbita, radio del planeta
+    1: { x: 540, y: 330, d: 400, r: 60} // El radio ha de ser la mitad de la longitud de la imagen
   },
   player: {
     x: 100,
@@ -158,7 +157,6 @@ Q.Sprite.extend("Hammer", {
       velX: paramVx,
       velY: paramVy,
       gravity:0,
-      stage: "going",
       t: 0
     });
     this.add('2d, animation, tween, platformerControls');
@@ -177,21 +175,25 @@ Q.Sprite.extend("Hammer", {
   },
 
   step: function(dt){
-    // Calculamos distancia con planeta
+    
     this.p.t+= 1/(16*60); // Calculamos los segundos que han pasado
-    var planets = Q.state.get("planets");
-    var nPlanet = Q.state.get("nPlanet");
+    var planets = Q.state.get("planets"); // Cogemos el objeto planetas de la variable global Q.state
+    var nPlanet = Q.state.get("nPlanet"); // Cogemos el índice del planeta actual
+    // Calculamos distancia en línea recta con el planeta
     var d = Math.sqrt((planets[nPlanet].x - this.p.x) * (planets[nPlanet].x - this.p.x) + (planets[nPlanet].y - this.p.y) * (planets[nPlanet].y - this.p.y));
-    //console.log("Distancia: " + d);
-    //console.log("Distancia mínima: " + planets[nPlanet].d);
+          //console.log("Distancia: " + d);
+          //console.log("Distancia mínima: " + planets[nPlanet].d);
+    // Si ha entrado en órbita (la distancia al planeta es menor que la distancia de órbita (planets[nPlanet].d)) y no ha llegado a la superficie (usamos el radio)
     if (d < planets[nPlanet].d && !(d > -planets[nPlanet].r && d < planets[nPlanet].r)){
-      //console.log("Has entrado en el campo gravitatorio");
-      // Aplicar fuerzas
+          //console.log("Has entrado en el campo gravitatorio");
+      // Calculamos distancias
       var dx = planets[nPlanet].x - this.p.x;
       var dy = planets[nPlanet].y - this.p.y;
+      // Calculamos la gravedad en función de la posición (habría que usar la fórmula gravitacional)
       var ax = dx < 0 ? -9.8 : 9.8;
       var ay = dy < 0 ? -9.8 : 9.8;
       
+      // Calculamos las velocidades en ambos ejes (guardamos en variable auxiliar porque si no no funciona)
       this.p.velX = ax*this.p.t + this.p.velX;
       this.p.vx = this.p.velX;
       this.p.velY = ay*this.p.t + this.p.velY;
@@ -199,14 +201,14 @@ Q.Sprite.extend("Hammer", {
 
       //this.p.x = (1/2*ax*this.p.t*this.p.t) + this.p.vx*this.p.t + this.p.x;
       //this.p.y = (1/2*ay*this.p.t*this.p.t) + this.p.vy*this.p.t + this.p.y;
-      //console.log("x: " + this.p.x);
-
-      //console.log("vx: " + this.p.vx);
-      //console.log("vy: " + this.p.vy);
+          //console.log("x: " + this.p.x);
+          //console.log("vx: " + this.p.vx);
+          //console.log("vy: " + this.p.vy);
     }
     else{
-      //console.log("Has salido del campo gravitatorio");
+          //console.log("Has salido del campo gravitatorio");
     }
+    // Si ha llegado a la superficie (Ha chocado con el planeta)
     if(d > -planets[nPlanet].r && d < planets[nPlanet].r){
       console.log("Quieto");
       this.p.vx = 0;
@@ -281,8 +283,7 @@ Q.scene("level1",function(stage) {
       
       //var wormhole=stage.insert(new Q.Wormhole(550, 320));
 
-      var vortex=stage.insert(new Q.Vortex(250, 320));
-      //var q=stage.insert(new Q.QuarterStarfield(250, 420));
+      var vortex=stage.insert(new Q.EventHorizon(250, 320));
 
       var hammer = stage.insert(new Q.Hammer(100, 520, 20, 0));
       
