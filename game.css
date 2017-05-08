@@ -1,5 +1,12 @@
+<<<<<<< HEAD
 @font-face 
 {
   font-family: "ethnocentric";
   src: url("assets/font/ethnocentric rg.ttf") format("truetype");
+=======
+@font-face 
+{
+  font-family: "ethnocentric";
+  src: url("assets/font/ethnocentric rg.ttf") format("truetype");
+>>>>>>> origin/master
 }
