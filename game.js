@@ -35,6 +35,63 @@ Q.Sprite.extend("Wormhole", {
   }
 });
 
+Q.Sprite.extend("Planet", {
+  init: function(paramX, paramY, paramAsset){
+    this._super({
+      asset: paramAsset,
+      x: paramX,
+      y: paramY
+    });
+    this.p.sensor = true;
+  }
+});
+
+function createPlanet(stage){
+  var n = Q.state.get("nPlanet");
+  var planets = Q.state.get("planets");
+  var p = planets[n];
+  stage.insert(new Q.Planet(p.x, p.y, n + ".png"));
+}
+
+function createPlanets(stage){
+  var planets = Q.state.get("planets");
+  for(var i = 1; i < 8; i++){
+    var p = planets[i];
+      stage.insert(new Q.Planet(p.x, p.y, i + ".png"));
+  }
+}
+
+Q.Sprite.extend("Blackhole", {
+  init:function(paramX, paramY, paramAsset, paramScale){
+    this._super({
+      asset: paramAsset,
+      x: paramX,
+      y: paramY, 
+      gravity: 0,
+      scale: paramScale,
+      created: false
+    });
+    this.add('2d, animation, tween');
+    this.p.sensor=true;
+  },
+
+  step: function(){
+    if(this.p.created == false){
+      this.p.created = true;
+      if(this.p.scale > 0.4 && this.p.asset != "wormhole.png"){
+        this.animate({angle: 5000 * (1.2 - this.p.scale)}, 180);
+        console.log("Scale: " + this.p.scale);
+        this.stage.insert(new Q.Blackhole((this.p.x + (this.p.w - this.p.w*this.p.scale)/100), (this.p.y + (this.p.h - this.p.h*this.p.scale)/100), "interiorCircularInfluence.png", this.p.scale - 0.2));
+      }
+      else if (this.p.scale < 0.4 && this.p.scale > 0.2){
+        console.log("Blackhole: " + this.p.scale)
+        this.stage.insert(new Q.Blackhole((this.p.x + (this.p.w - this.p.w*this.p.scale)/100), (this.p.y + (this.p.h - this.p.h*this.p.scale)/100), "wormhole.png", 0.4));
+      }
+    }
+  }
+});
+
+/*
 // Estas dos son clases para dar un efecto de distorsión del espacio alrededor del Wormhole
 Q.Sprite.extend("exteriorCircularInfluence", {
   init:function(paramX, paramY){
@@ -62,7 +119,7 @@ Q.Sprite.extend("interiorCircularInfluence", {
   step: function(){
   }
 });
-
+*/
 
 // Clase que representa un lado del campo de estrellas de EventHorizon
 Q.Sprite.extend("QuarterStarfield", {
@@ -94,10 +151,10 @@ Q.Sprite.extend("QuarterStarfield", {
       this.p.vx = -180;
       this.p.angle = 90;
     }
-    this.add('2d, animation, tween');
+    this.add('animation, tween');
     this.p.sensor=true;
     this.animate({angle: this.p.angle}); // Rotamos en función del side
-    this.animate({scale: 2, opacity: 0.5}, 8); // Extendemos hacia fuera para dar efecto de túnel
+    this.animate({scale: 2, opacity: 0}, 8); // Extendemos hacia fuera para dar efecto de túnel
     var self = this;
     setTimeout(function(){
       self.destroy(); // A los 8 segundos muere
@@ -115,15 +172,17 @@ Q.Sprite.extend("EventHorizon", {
       x: paramX,
       y: paramY,
       scale: 1,
+      opacity: 0,
       t: 0 // Factor "tiempo"
     });
     this.add('animation, tween');
     this.p.sensor=true;
+    this.animate({opacity: 1}, 2); 
     this.animate({angle: -3000}, 80); // Molaría que diese vueltas en loop
   },
   step: function(){
     this.p.t++;
-    if(this.p.t%80 == 0){ // Cada cierto tiempo creamos nuevos campos de estrellas
+    if(this.p.t%100 == 0){ // Cada cierto tiempo creamos nuevos campos de estrellas
       this.stage.insert(new Q.QuarterStarfield(this.p.x, this.p.y + 100, "bottom"));
       this.stage.insert(new Q.QuarterStarfield(this.p.x, this.p.y - 100, "top"));
       this.stage.insert(new Q.QuarterStarfield(this.p.x + 80, this.p.y - 20, "right"));
@@ -135,13 +194,21 @@ Q.Sprite.extend("EventHorizon", {
 
 // Global Quintus variables
 Q.state.set({
-  nPlanet: 1, // Índice del planeta actual, cuando se incremente, creamos el planeta
+  nPlanet: 0, // Índice del planeta actual, cuando se incremente, creamos el planeta
   planets: { // Coordenadas, distancia de órbita, radio del planeta
-    1: { x: 540, y: 330, d: 400, r: 60} // El radio ha de ser la mitad de la longitud de la imagen
+    1: { x: 540, y: 330, d: 400, r: 60, name: "Pandora", g: 12}, // El radio ha de ser la mitad de la longitud de la imagen
+    2: { x: 1240, y: 330, d: 400, r: 160, name: "Reddy", g: 12},
+    3: { x: 1840, y: 330, d: 400, r: 210, name: "Greeny", g: 12},
+    4: { x: 2340, y: 330, d: 400, r: 250, name: "Veggie", g: 12},
+    5: { x: 4040, y: 330, d: 400, r: 300, name: "Bluey", g: 12},
+    6: { x: 5200, y: 330, d: 400, r: 125, name: "Stormzy", g: 12},
+    7: { x: 7200, y: 330, d: 400, r: 350, name: "Purply", g: 12}
   },
   player: {
     x: 100,
-    y: 320
+    y: 320,
+    oxygen: 100,
+    spaceSuit: 100
   }
 });
 
@@ -168,6 +235,10 @@ Q.Sprite.extend("Hammer", {
     Q.input.on("down", this, function(){
       this.p.vy = 40;
     });
+    Q.input.on("S", this, function(){
+      console.log("x: " + this.p.x);
+      console.log("y: " + this.p.y);
+    });
   },
 
   die: function(){
@@ -179,8 +250,8 @@ Q.Sprite.extend("Hammer", {
     this.p.t+= 1/(16*60); // Calculamos los segundos que han pasado
     var planets = Q.state.get("planets"); // Cogemos el objeto planetas de la variable global Q.state
     var nPlanet = Q.state.get("nPlanet"); // Cogemos el índice del planeta actual
-    // Calculamos distancia en línea recta con el planeta
-    var d = Math.sqrt((planets[nPlanet].x - this.p.x) * (planets[nPlanet].x - this.p.x) + (planets[nPlanet].y - this.p.y) * (planets[nPlanet].y - this.p.y));
+    if(nPlanet > 0){
+       var d = Math.sqrt((planets[nPlanet].x - this.p.x) * (planets[nPlanet].x - this.p.x) + (planets[nPlanet].y - this.p.y) * (planets[nPlanet].y - this.p.y));
           //console.log("Distancia: " + d);
           //console.log("Distancia mínima: " + planets[nPlanet].d);
     // Si ha entrado en órbita (la distancia al planeta es menor que la distancia de órbita (planets[nPlanet].d)) y no ha llegado a la superficie (usamos el radio)
@@ -194,9 +265,9 @@ Q.Sprite.extend("Hammer", {
       var ay = dy < 0 ? -9.8 : 9.8;
       
       // Calculamos las velocidades en ambos ejes (guardamos en variable auxiliar porque si no no funciona)
-      this.p.velX = ax*this.p.t + this.p.velX;
+      this.p.velX = ax*this.p.t + this.p.vx;
       this.p.vx = this.p.velX;
-      this.p.velY = ay*this.p.t + this.p.velY;
+      this.p.velY = ay*this.p.t + this.p.vy;
       this.p.vy = this.p.velY;
 
       //this.p.x = (1/2*ax*this.p.t*this.p.t) + this.p.vx*this.p.t + this.p.x;
@@ -214,6 +285,9 @@ Q.Sprite.extend("Hammer", {
       this.p.vx = 0;
       this.p.vy = 0;
     }
+    }
+    // Calculamos distancia en línea recta con el planeta
+   
   }
 
 });
@@ -261,7 +335,7 @@ Q.load(["Woof.mp3", "metalBang.mp3", "Hammer.mp3", "Victory.mp3","music_main.mp3
 });
 */
 
-Q.load(["blackhole.png", "quarterStarfield.png", "quarterStarfield2.png", "vortex.png", "wormhole.png", "interiorCircularInfluence.png", "exteriorCircularInfluence.png", "galaxy.png", "hammer.png", "hammer.json", "thunder.png", "thunder.json", "prost_small.png", "prost.json", "mainTitle.png","princess.png","coin.png","coin.json","mario_small.png", "mario_small.json", "goomba.png", "goomba.json", "bloopa.png", "bloopa.json", "bgProst.png"], function(){
+Q.load(["1.png","2.png", "3.png","4.png","5.png","6.png","7.png","8.png","blackhole.png", "quarterStarfield.png", "quarterStarfield2.png", "vortex.png", "wormhole.png", "interiorCircularInfluence.png", "exteriorCircularInfluence.png", "galaxy.png", "hammer.png", "hammer.json", "thunder.png", "thunder.json", "prost_small.png", "prost.json", "mainTitle.png","princess.png","coin.png","coin.json","mario_small.png", "mario_small.json", "goomba.png", "goomba.json", "bloopa.png", "bloopa.json", "bgProst.png"], function(){
         Q.compileSheets("prost_small.png", "prost.json");
         Q.compileSheets("hammer.png", "hammer.json");
         Q.compileSheets("thunder.png", "thunder.json");
@@ -281,14 +355,20 @@ Q.scene("level1",function(stage) {
       //var extCircle=stage.insert(new Q.exteriorCircularInfluence(550, 320));
       //var intCircle=stage.insert(new Q.interiorCircularInfluence(550, 320));
       
-      //var wormhole=stage.insert(new Q.Wormhole(550, 320));
+      //var wormhole=stage.insert(new Q.Wormhole(550, 320, "wormhole.png"));
+      //var blackhole=stage.insert(new Q.Blackhole(550, 320, "interiorCircularInfluence.png", 1));
+      //var vortex=stage.insert(new Q.EventHorizon(850, 320));
+      createPlanets(stage);
+      var hammer = stage.insert(new Q.Hammer(200, 520, 20, 0));
+      stage.add("viewport").follow(hammer,{ x: true, y: false });
+});
 
-      var vortex=stage.insert(new Q.EventHorizon(250, 320));
+Q.scene("playerScene",function(stage) {
 
-      var hammer = stage.insert(new Q.Hammer(100, 520, 20, 0));
+      //var hammer = stage.insert(new Q.Hammer(100, 520, 20, 0));
       
       //Q.stageTMX("levelProst.tmx",stage);
-      stage.add("viewport").follow(hammer,{ x: true, y: false });
+      //stage.add("viewport").follow(hammer,{ x: true, y: false });
 });
 
 Q.loadTMX("levelProst.tmx", function() {
@@ -335,17 +415,26 @@ Q.scene('menu',function(stage) {
   button.on("click",function() {
     Q.clearStages();
     Q.state.reset({
-      nPlanet: 1,
-      planets: {
-        1: { x: 540, y: 330, d: 400, r : 60}
+      nPlanet: 1, // Índice del planeta actual, cuando se incremente, creamos el planeta
+      planets: { // Coordenadas, distancia de órbita, radio del planeta
+        1: { x: 540, y: 330, d: 400, r: 134, name: "Pandora", g: 12}, // El radio ha de ser la mitad de la longitud de la imagen
+        2: { x: 1240, y: 330, d: 400, r: 160, name: "Reddy", g: 12},
+        3: { x: 1840, y: 330, d: 400, r: 210, name: "Greeny", g: 12},
+        4: { x: 2340, y: 330, d: 400, r: 250, name: "Veggie", g: 12},
+        5: { x: 4040, y: 330, d: 400, r: 300, name: "Bluey", g: 12},
+        6: { x: 5200, y: 330, d: 400, r: 125, name: "Stormzy", g: 12},
+        7: { x: 7200, y: 330, d: 400, r: 350, name: "Purply", g: 12}
       },
       player: {
         x: 100,
-        y: 320
+        y: 320,
+        oxygen: 100,
+        spaceSuit: 100
       }
     });
     Q.stageScene('level1', 0);
-    Q.stageScene('HUD', 1);
+    //Q.stageScene('playerScene', 1);
+    Q.stageScene('HUD', 2);
   });
 
 });
