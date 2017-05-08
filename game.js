@@ -335,7 +335,7 @@ Q.load(["Woof.mp3", "metalBang.mp3", "Hammer.mp3", "Victory.mp3","music_main.mp3
 });
 */
 
-Q.load(["1.png","2.png", "3.png","4.png","5.png","6.png","7.png","8.png","blackhole.png", "quarterStarfield.png", "quarterStarfield2.png", "vortex.png", "wormhole.png", "interiorCircularInfluence.png", "exteriorCircularInfluence.png", "galaxy.png", "hammer.png", "hammer.json", "thunder.png", "thunder.json", "prost_small.png", "prost.json", "mainTitle.png","princess.png","coin.png","coin.json","mario_small.png", "mario_small.json", "goomba.png", "goomba.json", "bloopa.png", "bloopa.json", "bgProst.png"], function(){
+Q.load(["1.png","2.png", "3.png","4.png","5.png","6.png","7.png","8.png","blackhole.png", "quarterStarfield.png", "quarterStarfield2.png", "vortex.png", "wormhole.png", "interiorCircularInfluence.png", "exteriorCircularInfluence.png", "galaxy.png", "hammer.png", "hammer.json", "thunder.png", "thunder.json", "prost_small.png", "prost.json", "mainTitle.png","princess.png","coin.png","coin.json","mario_small.png", "mario_small.json", "goomba.png", "goomba.json", "bloopa.png", "bloopa.json", "bgProst.png", "fondo.png"], function(){
         Q.compileSheets("prost_small.png", "prost.json");
         Q.compileSheets("hammer.png", "hammer.json");
         Q.compileSheets("thunder.png", "thunder.json");
@@ -399,11 +399,11 @@ Q.scene('endGame',function(stage) {
 });
 
 Q.scene('menu',function(stage) {
-  var container = stage.insert(new Q.UI.Container({
+  /*var container = stage.insert(new Q.UI.Container({
     x: Q.width/2, y: Q.height/2, fill: "rgba(0,0,0,0.5)"
-  }));
+  }));*/
 
-  var button = container.insert(new Q.UI.Button({ x: 0, y: 0, fill: "#CCCCCC", w:Q.width, h:Q.height, asset:"mainTitle.png" })); 
+ var button = stage.insert(new Q.UI.Button({x: screen.width/2, y: screen.height/2,fill: "#CCCCCC", w: screen.width, h: screen.height, asset:"fondo.png" }));
   /*
   this.on("confirm", function(){
     Q.clearStages();
