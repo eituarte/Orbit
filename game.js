@@ -36,16 +36,18 @@ Q.Sprite.extend("Wormhole", {
 });
 
 Q.Sprite.extend("Planet", {
-  init: function(paramX, paramY, paramAsset, paramG, paramR, paramO){
+  init: function(paramX, paramY, paramAsset, paramR, paramD, paramN){
     this._super({
       asset: paramAsset,
       x: paramX,
       y: paramY,
-      g: paramG,
+      d: paramD,
       r: paramR,
-      o: paramO
+      n: paramN
     });
     this.p.sensor = true;
+    var orbit = {x1: 0, x2: 0};
+    Q.state.set("orbits")
   }
 });
 
@@ -53,15 +55,18 @@ function createPlanet(stage){
   var n = Q.state.get("nPlanet");
   var planets = Q.state.get("planets");
   var p = planets[n];
-  stage.insert(new Q.Planet(p.x, p.y, n + ".png"));
+  stage.insert(new Q.Planet(p.x, p.y, n + ".png", p.r, p.d, n));
 }
 
 function createPlanets(stage){
   var planets = Q.state.get("planets");
+  var orbits = {};
   for(var i = 1; i < 8; i++){
     var p = planets[i];
-      stage.insert(new Q.Planet(p.x, p.y, i + ".png"));
+      stage.insert(new Q.Planet(p.x, p.y, i + ".png", p.r, p.d, i));
+      orbits[i] = {x1: p.x - 2*(p.r + p.d), x2: p.x + 2*(p.r + p.d)};
   }
+  Q.state.set("orbits", orbits);
 }
 
 Q.Sprite.extend("Blackhole", {
@@ -197,23 +202,70 @@ Q.Sprite.extend("EventHorizon", {
 
 // Global Quintus variables
 Q.state.set({
-  nPlanet: 0, // Índice del planeta actual, cuando se incremente, creamos el planeta
-  planets: { // Coordenadas, distancia de órbita, radio del planeta
-    1: { x: 540, y: 330, d: 400, r: 60, name: "Pandora", g: 12}, // El radio ha de ser la mitad de la longitud de la imagen
-    2: { x: 1240, y: 330, d: 400, r: 160, name: "Reddy", g: 12},
-    3: { x: 1840, y: 330, d: 400, r: 210, name: "Greeny", g: 12},
-    4: { x: 2340, y: 330, d: 400, r: 250, name: "Veggie", g: 12},
-    5: { x: 4040, y: 330, d: 400, r: 300, name: "Bluey", g: 12},
-    6: { x: 5200, y: 330, d: 400, r: 125, name: "Stormzy", g: 12},
-    7: { x: 7200, y: 330, d: 400, r: 350, name: "Purply", g: 12}
-  },
-  player: {
-    x: 100,
-    y: 320,
-    oxygen: 100,
-    spaceSuit: 100
-  }
+      nPlanet: 1, // Índice del planeta actual, cuando se incremente, creamos el planeta
+      planets: { // Coordenadas, distancia de órbita, radio del planeta
+        1: { x: 1540, y: 330, d: 400, r: 130, name: "Mars", g: 12}, // ( 1540 - 2x(530), 1540 + 2x())
+        2: { x: 4240, y: 330, d: 450, r: 160, name: "Reddy", g: 12}, // ()
+        3: { x: 8840, y: 330, d: 500, r: 210, name: "Greeny", g: 12},
+        4: { x: 12340, y: 330, d: 550, r: 250, name: "Veggie", g: 12},
+        5: { x: 20040, y: 330, d: 600, r: 300, name: "Bluey", g: 12},
+        6: { x: 25200, y: 330, d: 400, r: 125, name: "Stormzy", g: 12},
+        7: { x: 37200, y: 330, d: 700, r: 350, name: "Purply", g: 12}
+      },
+      orbits: { // Estos datos se rellenan al crear la partida
+        1: {x1: 0, x2: 0},
+        2: {x1: 0, x2: 0},
+        3: {x1: 0, x2: 0},
+        4: {x1: 0, x2: 0},
+        5: {x1: 0, x2: 0},
+        6: {x1: 0, x2: 0},
+        7: {x1: 0, x2: 0}
+      },
+      player: {
+        x: 100,
+        y: 320,
+        oxygen: 100,
+        spaceSuit: 100
+      },
+      orbimeters: 150000,
+      distanceToRadius: 0
 });
+
+function radar(x){
+  var orbits = Q.state.get("orbits");
+    if(x > orbits["1"].x1 && x < orbits["1"].x2){
+      console.log("En órbita de planeta 1");
+      Q.state.set("nPlanet", 1);
+    }
+    else if(x > orbits["2"].x1 && x < orbits["2"].x2){
+      console.log("En órbita de planeta 2");
+      Q.state.set("nPlanet", 2);
+    }
+    else if(x > orbits["3"].x1 && x < orbits["3"].x2){
+      console.log("En órbita de planeta 3");
+      Q.state.set("nPlanet", 3);
+    }
+    else if(x > orbits["4"].x1 && x < orbits["4"].x2){
+      console.log("En órbita de planeta 4");
+      Q.state.set("nPlanet", 4);
+    }
+    else if(x > orbits["5"].x1 && x < orbits["5"].x2){
+      console.log("En órbita de planeta 5");
+      Q.state.set("nPlanet", 5);
+    }
+    else if(x > orbits["6"].x1 && x < orbits["6"].x2){
+      console.log("En órbita de planeta 6");
+      Q.state.set("nPlanet", 6);
+    }
+    else if(x > orbits["1"].x1 && x < orbits["1"].x2){
+      console.log("En órbita de planeta 7");
+      Q.state.set("nPlanet", 7);
+    }
+    else{
+      console.log("Fuera de órbita");
+      Q.state.set("nPlanet", 0);
+    }
+}
 
 Q.Sprite.extend("Hammer", {
   init:function(paramX, paramY, paramVx, paramVy){
@@ -227,7 +279,8 @@ Q.Sprite.extend("Hammer", {
       velX: 0,
       velY: 0,
       gravity:0,
-      t: 0
+      t: 0,
+      m: 0
     });
     this.add('2d, animation, tween');
     this.p.sensor=true;
@@ -260,6 +313,9 @@ Q.Sprite.extend("Hammer", {
       console.log("x: " + this.p.x);
       console.log("y: " + this.p.y);
     });
+    Q.state.on("change.orbimeters", function(){
+        Q.stageScene("RADAR", 1, {textOrbimeters: {label: Q.state.get("orbimeters")}});
+    });
   },
 
   die: function(){
@@ -267,54 +323,48 @@ Q.Sprite.extend("Hammer", {
   },
 
   step: function(dt){
-    
+
+    // Primero guardamos la posición del astronauta y calculamos la órbita actual
+    radar(this.p.x);
+    if(this.p.vx != 0 && this.p.m%16*60 == 0)
+        Q.state.set("orbimeters", Math.trunc(150000 - this.p.x));
+    this.p.m++;
     this.p.t+= 1/(16*60); // Calculamos los segundos que han pasado
     var planets = Q.state.get("planets"); // Cogemos el objeto planetas de la variable global Q.state
     var nPlanet = Q.state.get("nPlanet"); // Cogemos el índice del planeta actual
+
     if(nPlanet > 0){
-       var d = Math.sqrt((planets[nPlanet].x - this.p.x) * (planets[nPlanet].x - this.p.x) + (planets[nPlanet].y - this.p.y) * (planets[nPlanet].y - this.p.y));
+      var d = Math.sqrt((planets[nPlanet].x - this.p.x) * (planets[nPlanet].x - this.p.x) + (planets[nPlanet].y - this.p.y) * (planets[nPlanet].y - this.p.y));
+      Q.state.set("distanceToRadius", Math.trunc(d));
           //console.log("Distancia: " + d);
           //console.log("Distancia mínima: " + planets[nPlanet].d);
       // Si ha entrado en órbita (la distancia al planeta es menor que la distancia de órbita (planets[nPlanet].d)) y no ha llegado a la superficie (usamos el radio)
       if (d < planets[nPlanet].d && !(d > -planets[nPlanet].r && d < planets[nPlanet].r)){
             //console.log("Has entrado en el campo gravitatorio");
         // Calculamos distancias
-        if(!this.p.orbit){
-          this.p.velX = this.p.vx;
-          this.p.velY = this.p.vy;
-          this.p.orbit = true;
-        }
+        
 
         var dx = planets[nPlanet].x - this.p.x;
         var dy = planets[nPlanet].y - this.p.y;
-        // Calculamos la gravedad en función de la posición (habría que usar la fórmula gravitacional)
-        var ax = dx < 0 ? -9.8 : 9.8;
-        var ay = dy < 0 ? -9.8 : 9.8;
+        var g = planets[nPlanet].g;
+        var ax = dx < 0 ? -g : g;
+        var ay = dy < 0 ? -g : g;
 
-        // Calculamos las velocidades en ambos ejes (guardamos en variable auxiliar porque si no no funciona)
         this.p.vx = ax*this.p.t + this.p.vx;
-        //this.p.vx = this.p.velX;
         this.p.vy = ay*this.p.t + this.p.vy;
-        //this.p.vy = this.p.velY;
-
-        //this.p.x = (1/2*ax*this.p.t*this.p.t) + this.p.vx*this.p.t + this.p.x;
-        //this.p.y = (1/2*ay*this.p.t*this.p.t) + this.p.vy*this.p.t + this.p.y;
-            //console.log("x: " + this.p.x);
-            //console.log("vx: " + this.p.vx);
-            //console.log("vy: " + this.p.vy);
       }
       else{
             //console.log("Has salido del campo gravitatorio");
       }
       // Si ha llegado a la superficie (Ha chocado con el planeta)
       if(d > -planets[nPlanet].r && d < planets[nPlanet].r){
-        console.log("Quieto");
         this.p.vx = 0;
         this.p.vy = 0;
       }
     }
-    // Calculamos distancia en línea recta con el planeta
-   
+    else if (nPlanet == 0){
+
+    }   
   }
 
 });
@@ -352,6 +402,33 @@ Q.Class.extend("DebrisSpawner", {
   init:function(stage, player){
       this.stg= stage;
       this.play= player;
+      this.t = 0;
+      this.nDebris = 0;
+  },
+  step: function(){
+    this.p.t++;
+    if(this.p.t%100 == 0 && this.p.nDebris < 5){
+      var num = Math.round(Math.random()); //si num es igual a 0 inserta un objeto debris
+      if(num == 0){
+        
+        //POSICIONAMIENTO
+        var playX = this.play.p.x;  //posicion del jugador en el eje x
+        var posX = Math.random()* ((playX+800) - (playX+200)) + (playX+200); //posicion del debris en el eje x entre [playX+200,playX+800]
+        var posY = Math.random()* screen.height;  //posicion del debris en el eje y entre [0,altura de la pantalla]
+        //VELOCIDADES
+        var velX = Math.round(Math.random()* 40)*(-1); // velocidad en el eje x siempre negativa para que vaya a la izda.
+        var dir = 1;
+        if(posY > (screen.height/2)){ //si la posY es mayor que la mitad de la pantalla va hacia arriba en caso contario hacia abajo
+          dir = -1;
+        }
+        var velY = Math.round(Math.random()* 40)* dir;
+        //ASSETS
+        var debrisNum = Q.state.get('nDebris');
+        var debrisNumAsset = Math.round(Math.random()* (debrisNum - 1) + 1);
+        var debrisAsset = 'debris'+debrisNumAsset+'.png';
+        self.stg.insert(new Q.Debris(posX, posY, velX, velY, debrisAsset));
+      }
+    }
   },
   spawn: function(){
     var self = this;
@@ -395,6 +472,34 @@ Q.component("defaultEnemy",{
   }
 });
 
+Q.scene("RADAR", function(stage){
+
+  var orbimeters = Q.state.get("orbimeters");
+  var textOrbimeters = new Q.UI.Text({family: "arial", x: Q.width - 30, y: 10, label: "Orbimeters to Station: " + orbimeters, color: "#FFDA6C", outlineWidth: 3, size: 14, align: "right"});
+  stage.insert(textOrbimeters);
+
+  var n = Q.state.get("nPlanet");
+  if(n != 0){
+
+    var planets = Q.state.get("planets");
+    var distanceToRadius = Q.state.get("distanceToRadius");
+    var planet = planets[n];
+    var planetName = planet.name;
+    var planetRadius = planet.r;
+    var planetOrbit = planet.d;
+    var planetGravity = planet.g;
+    var textName = new Q.UI.Text({family: "arial",x: Q.width - 30, y: 40, label: "Planet: " + planetName, color: "#FFDA6C", outlineWidth: 3, size: 14, align: "right"});
+    var textRadius = new Q.UI.Text({family: "arial",x: Q.width - 30, y: 60, label: "Radius: " + planetRadius, color: "#FFDA6C", outlineWidth: 3, size: 14, align: "right"});
+    var textDistanceRadius = new Q.UI.Text({family: "arial",x: Q.width - 30, y: 80, label: "Distance to radius: " + distanceToRadius, color: "#FFDA6C", outlineWidth: 3, size: 14, align: "right"});
+    var textOrbit = new Q.UI.Text({family: "arial",x: Q.width - 30, y: 100, label: "Orbit: " + planetOrbit, color: "#FFDA6C", outlineWidth: 3, size: 14, align: "right"});
+    var textGravity = new Q.UI.Text({family: "arial",x: Q.width - 30, y: 120, label: "Gravity: " + planetGravity, color: "#FFDA6C", outlineWidth: 3, size: 14, align: "right"});
+    stage.insert(textName);
+    stage.insert(textRadius);
+    stage.insert(textDistanceRadius);
+    stage.insert(textOrbit);
+    stage.insert(textGravity);
+  }
+});
 /*
 Q.scene("HUD",function(stage) {
 
@@ -446,12 +551,6 @@ Q.load(["1.png","2.png", "3.png","4.png","5.png","6.png","7.png",
 
 Q.scene("level1",function(stage) {
       stage.insert(new Q.Repeater({ asset: "bgProst.png", speedX: 0.2, speedY: 0.2, type: 0 }));
-      //stage.insert(new Q.Repeater({ asset: "galaxy.png", speedX: 0.5, speedY: 0.5, type: 0 }));
-      
-      //var extCircle=stage.insert(new Q.exteriorCircularInfluence(350, 250));
-      
-      //var extCircle=stage.insert(new Q.exteriorCircularInfluence(550, 320));
-      //var intCircle=stage.insert(new Q.interiorCircularInfluence(550, 320));
       
       //var wormhole=stage.insert(new Q.Wormhole(550, 320, "wormhole.png"));
       //var blackhole=stage.insert(new Q.Blackhole(550, 320, "interiorCircularInfluence.png", 1));
@@ -492,8 +591,9 @@ Q.scene('endGame',function(stage) {
     Q.state.reset({score: 0, hammer: " ", game: "playing", lifePoints: 5, hint: "Hint: find the power of the Gods"});
     //Q.audio.play('music_main.mp3',{ loop: true });
     Q.stageScene('level1', 0);
-    Q.stageScene('HUD', 1);
+    Q.stageScene('RADAR', 1);
   });
+
 
   container.fit(20);
 });
@@ -514,32 +614,40 @@ Q.scene('menu',function(stage) {
 
   button.on("click",function() {
     Q.clearStages();
+
     Q.state.reset({
       nPlanet: 1, // Índice del planeta actual, cuando se incremente, creamos el planeta
       planets: { // Coordenadas, distancia de órbita, radio del planeta
-        1: { x: 540, y: 330, d: 400, r: 134, name: "Pandora", g: 12}, // El radio ha de ser la mitad de la longitud de la imagen
-        2: { x: 1240, y: 330, d: 400, r: 160, name: "Reddy", g: 12},
-        3: { x: 1840, y: 330, d: 400, r: 210, name: "Greeny", g: 12},
-        4: { x: 2340, y: 330, d: 400, r: 250, name: "Veggie", g: 12},
-        5: { x: 4040, y: 330, d: 400, r: 300, name: "Bluey", g: 12},
-        6: { x: 5200, y: 330, d: 400, r: 125, name: "Stormzy", g: 12},
-        7: { x: 7200, y: 330, d: 400, r: 350, name: "Purply", g: 12}
+        1: { x: 1540, y: 330, d: 400, r: 130, name: "Mars", g: 9.8}, // ( 1540 - 2x(530), 1540 + 2x())
+        2: { x: 4240, y: 330, d: 450, r: 160, name: "Reddy", g: 6}, // ()
+        3: { x: 8840, y: 330, d: 500, r: 210, name: "Greeny", g: 4},
+        4: { x: 12340, y: 330, d: 250, r: 250, name: "Veggie", g: 8},
+        5: { x: 20040, y: 330, d: 600, r: 300, name: "Bluey", g: 2},
+        6: { x: 25200, y: 330, d: 400, r: 125, name: "Stormzy", g: 10},
+        7: { x: 37200, y: 330, d: 700, r: 350, name: "Purply", g: 12}
       },
-      debris: {
-        debris1: {name: 'meteorite', asset:"debris1.png"},
-        debris2: {name: 'satellite', asset:"debris2.png"},
+      orbits: { // Estos datos se rellenan al crear la partida
+        1: {x1: 0, x2: 0},
+        2: {x1: 0, x2: 0},
+        3: {x1: 0, x2: 0},
+        4: {x1: 0, x2: 0},
+        5: {x1: 0, x2: 0},
+        6: {x1: 0, x2: 0},
+        7: {x1: 0, x2: 0}
       },
-      nDebris: 2,
       player: {
         x: 100,
         y: 320,
         oxygen: 100,
         spaceSuit: 100
-      }
+      },
+      orbimeters: 150000,
+      distanceToRadius: 0
     });
+  
     Q.stageScene('level1', 0);
     //Q.stageScene('playerScene', 1);
-    Q.stageScene('HUD', 2);
+    Q.stageScene('RADAR', 1);
   });
 
 });
