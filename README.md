@@ -20,7 +20,7 @@ This is our game for the subject "Videogames development with web technologies".
 see more info about this engine at these links:
 
 * [HTML5Quintus.com](http://html5quintus.com/)
-* [Github](https://github.com/cykod/Quintus)
+* [Github](https://github.com/cykod/Quintus/edit/master/README.md)
 
 ## Technical datasheet
 
