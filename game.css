@@ -1,12 +1,6 @@
-<<<<<<< HEAD
-@font-face 
-{
-  font-family: "ethnocentric";
-  src: url("assets/font/ethnocentric rg.ttf") format("truetype");
-=======
-@font-face 
-{
-  font-family: "ethnocentric";
-  src: url("assets/font/ethnocentric rg.ttf") format("truetype");
->>>>>>> origin/master
+@font-face {
+    font-family: "ethnocentric";
+    font-style: normal;
+    font-weight: normal;
+    src: local("?"), url("ethnocentric.ttf") format("truetype");
 }
