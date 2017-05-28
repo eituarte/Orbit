@@ -59,7 +59,7 @@ Q.Sprite.extend("Wormhole", {
       zIndex: z
     });
     this.add('2d, animation, tween');
-    //this.p.sensor=true;
+    this.p.sensor=true;
     this.p.h = 1000;
     this.p.w = 1000;
   }
@@ -210,7 +210,7 @@ Q.Sprite.extend("EventHorizon", {
     });
     this.add('animation, tween');
     this.p.sensor=true;
-    this.animate({opacity: 1}, 2, {callback: function(){
+    this.animate({opacity: 0.5}, 2, {callback: function(){
       this.animate({scale: 1.5}, 12);
     }}); 
     this.animate({angle: -1000}, 80); // Molaría que diese vueltas en loop
@@ -229,9 +229,9 @@ Q.Sprite.extend("EventHorizon", {
       this.stage.insert(new Q.QuarterStarfield(this.p.x - 30, this.p.y - 20, "left", 2));
     }
     if(this.p.t >= 800){
+      Q.state.set("dim", "2D");
       this.animate({opacity: 0, scale: 2.5}, 2, {callback: function(){
         this.destroy();
-        Q.state.set("dim", "2D");
       }});
     }
   }
@@ -336,9 +336,7 @@ Q.Sprite.extend("Spaceship", {
     });
     this.add('2d, animation, tween');
     this.play("right");
-    if(this.p.dimension == "3D"){
-      this.animate({scale: 1}, 2, Q.Easing.Quadratic.Out);
-    }
+    
     this.on('hit.sprite', function(collision) {
       if(collision.obj.isA('Rocket')) {
            this.vx += 20;
@@ -442,20 +440,39 @@ Q.Sprite.extend("Spaceship", {
         });
     });
 
-    this.on("bump.left, bump.right, bump.bottom, bump.top", function(collision){
+    this.on("hit", function(collision){
       if(collision.obj.isA("Wormhole")){
-        this.stage.insert(new Q.EventHorizon(this.p.x, this.p.y, 1));
-        this.stage.insert(new Q.DebrisSpawner(this, "3D", this.p.x, this.p.y));
-        this.stage.insert(new Q.Spaceship(this.p.x, this.p.y, 0, 0, 10, "3D"));
-        Q.state.set("dim", "3D"); // Cambiamos el modo de juego a 3D
-        this.destroy();
-        collision.obj.destroy();
-        Q.state.set("nPlanet", 0);
+        // Primero escalar el agujero negro
+          // Después crear el resto
+        //this.destroy();
+        this.p.zIndex = 30;
+        collision.obj.animate({scale: 10}, 3, Q.Easing.Quadratic.InOut, {callback: function(){
+          this.stage.insert(new Q.EventHorizon(this.p.x, this.p.y, 1, 1));
+          this.stage.insert(new Q.DebrisSpawner(this, "3D", this.p.x, this.p.y));
+          //var spaceship = this.stage.insert(new Q.Spaceship(this.p.x, this.p.y, 0, 0, 10, "3D"));
+          //this.stage.add("viewport").follow(spaceship,{ x: true, y: false });
+          Q.state.set("dim", "3D"); // Cambiamos el modo de juego a 3D
+          
+          collision.obj.destroy();
+          Q.state.set("nPlanet", "0");
+        }});
+        
       }
       if(collision.obj.isA("Blackhole")){
         collision.obj.destroy();
         console.log("Has chocado con la circunferencia");
-        Q.state.set("nPlanet", 0);
+        Q.state.set("nPlanet", "0");
+      }
+    });
+
+    Q.state.on("change.dim", this, function(){
+      if(Q.state.get("dim") == "2D"){
+        this.p.dimension = "2D";
+        this.animate({scale: 0.5}, 2, Q.Easing.Quadratic.Out);
+      }
+      else{
+        this.p.dimension = "3D";
+        this.animate({scale: 1}, 2, Q.Easing.Quadratic.Out);
       }
     });
   },
@@ -472,16 +489,21 @@ Q.Sprite.extend("Spaceship", {
     }
     if(this.p.vx != 0 && this.p.m%16*60 == 0)
         Q.state.set("orbimeters", Math.trunc(150000 - this.p.x));
+
     this.p.m++;
     this.p.t+= 1/(16*60); // Calculamos los segundos que han pasado
     var planets = Q.state.get("planets"); // Cogemos el objeto planetas de la variable global Q.state
     var nPlanet = Q.state.get("nPlanet"); // Cogemos el índice del planeta actual
+
     if(nPlanet != 0 && Q.state.get("dim") == "2D"){
       var d = Math.sqrt((planets[nPlanet].x - this.p.x) * (planets[nPlanet].x - this.p.x) + (planets[nPlanet].y - this.p.y) * (planets[nPlanet].y - this.p.y));
       if(this.p.m%16*60 == 0)
         Q.state.set("distanceToRadius", Math.trunc(d));
           //console.log("Distancia: " + d);
           //console.log("Distancia mínima: " + planets[nPlanet].d);
+      if(planets[nPlasnet].g == 0){ // Si es un agujero negro, atraemos
+        this.animate({x: planets[nPlanet].x, y: planets[nPlanet].y}, 2);
+      }
       // Si ha entrado en órbita (la distancia al planeta es menor que la distancia de órbita (planets[nPlanet].d)) y no ha llegado a la superficie (usamos el radio)
       if (d < planets[nPlanet].d && !(d > -planets[nPlanet].r && d < planets[nPlanet].r)){
             //console.log("Has entrado en el campo gravitatorio");
@@ -496,15 +518,7 @@ Q.Sprite.extend("Spaceship", {
 
         this.p.vx = ax*this.p.t + this.p.vx;
         this.p.vy = ay*this.p.t + this.p.vy;
-        /*if(this.p.vx > 0){
-          this.play("right");
-        }
-        else if(this.p.vx < 0){
-          this.play("left");
-        }
-        else
-          this.play(this.p.dir);
-        */
+
         if(this.p.dimension == "2D"){
           this.play(this.p.dir);
         }
@@ -956,7 +970,7 @@ Q.scene('menu',function(stage) {
       planets: { // Coordenadas, distancia de órbita, radio del planeta
         1: { x: 1540, y: 330, d: 400, r: 130, name: "Fiery", g: 9.8}, // ( 1540 - 2x(530), 1540 + 2x())
         2: { x: 4240, y: 330, d: 450, r: 160, name: "Reddy", g: 6}, // ()
-        wormhole : { x: 6240, y: 330, d: 850, r: 10, name: "Gargantua", g: 30},
+        wormhole : { x: 6240, y: 330, d: 850, r: 10, name: "Gargantua", g: 0},
         3: { x: 8840, y: 330, d: 500, r: 210, name: "Greeny", g: 4},
         4: { x: 12340, y: 330, d: 250, r: 250, name: "Veggie", g: 8},
         5: { x: 20040, y: 530, d: 600, r: 300, name: "Bluey", g: 2},
