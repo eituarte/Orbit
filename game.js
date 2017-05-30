@@ -214,7 +214,7 @@ Q.Sprite.extend("EventHorizon", {
       this.animate({scale: 1.5}, 12);
     }}); 
     this.animate({angle: -1000}, 80); // Molaría que diese vueltas en loop
-
+    Q.state.set('eventHorizon', this);
   },
   step: function(){
     this.p.t++;
@@ -263,6 +263,7 @@ Q.state.set({
         6: {x1: 0, x2: 0},
         7: {x1: 0, x2: 0}
       },
+      eventHorizon: undefined,
       player: {
         x: 100,
         y: 320,
@@ -361,6 +362,7 @@ Q.Sprite.extend("Spaceship", {
               console.log('l '+ this.p.life);
               collision.obj.destroy();
               if(player.spaceSuit <= 0){ // Perdemos la partida si nos quedamos sin nave
+                Q.audio.play("explosion.mp3");
                 this.destroy();
               }
             }
@@ -426,7 +428,7 @@ Q.Sprite.extend("Spaceship", {
     });
     Q.input.on("fire", this, function(){
       var offsetX = (this.p.dir == "right" ? 25 : -25);
-      Q.stage().insert(new Q.Bullet(this.p.x + offsetX, this.p.y + 5, this.p.dir));
+      Q.stage().insert(new Q.Bullet(this.p.x + offsetX, this.p.y + 5, this.p.dir , this.p.x, this.p.y));
       Q.audio.play("fireAux.mp3");
     });
     Q.input.on("S", this, function(){
@@ -479,7 +481,6 @@ Q.Sprite.extend("Spaceship", {
   },
 
   die: function(){
-    Q.audio.play("explosion.mp3");
     this.destroy();
   },
 
@@ -557,14 +558,16 @@ Q.Sprite.extend("Spaceship", {
 });
 
 Q.Sprite.extend("Bullet", {
-  init:function(paramX, paramY, paramDir){
+  init:function(paramX, paramY, paramDir, paramOrgX, paramOrgY){
     this._super({
       asset: "bullet.png",
       x: paramX,
       y: paramY,
       vx: 800,
       vy: 0,
-      dir: paramDir
+      dir: paramDir,
+      orgX: paramOrgX,
+      orgY: paramOrgY
     });
     this.add('animation, tween');
     this.p.sensor=true;
@@ -576,13 +579,43 @@ Q.Sprite.extend("Bullet", {
     })
   },
   step: function(dt){
-    if(this.p.dir == 'right'){
-      this.p.x += dt*this.p.vx;
+    if(Q.state.get('dim')== '2D'){
+      if(this.p.dir == 'right'){
+       this.p.x += dt*this.p.vx;
+      }else{
+        this.p.x -= dt*this.p.vx;
+      }
+      if(this.p.y < 0 || this.p.y>screen.height){
+        this.destroy();
+      }
     }else{
-      this.p.x -= dt*this.p.vx;
-    }
-    if(this.p.y < 0 || this.p.y>screen.height){
-      this.destroy();
+      var evH = Q.state.get('eventHorizon');
+      if(this.p.y < 0 || this.p.y>screen.height || (this.p.x == evH.p.x && this.p.y == evH.p.y)){
+        this.destroy();
+      }else{
+        if(this.p.dir == 'right'){
+          this.p.x += dt*this.p.vx;
+          if(evH.p.x >= this.p.orgX){
+            this.p.vy = this.p.vx;
+            if(evH.p.y >= this.p.orgY){
+              this.p.y += dt*this.p.vy;
+            }else{
+              this.p.y -= dt*this.p.vy;
+            }
+          }
+          this.p.x += dt*this.p.vx;
+        }else{
+          this.p.x -= dt*this.p.vx;
+          if(evH.p.x <= this.p.orgX){
+            this.p.vy = this.p.vx;
+            if(evH.p.y >= this.p.orgY){
+              this.p.y += dt*this.p.vy;
+            }else{
+              this.p.y -= dt*this.p.vy;
+            }
+          }
+        }
+      }
     }
   }
 });
@@ -994,6 +1027,7 @@ Q.scene('menu',function(stage) {
         7: {x1: 0, x2: 0},
         wormhole: {x1: 0, x2: 0}
       },
+      eventHorizon: undefined,
       player: {
         x: 100,
         y: 320,
