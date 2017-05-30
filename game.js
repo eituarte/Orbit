@@ -427,6 +427,7 @@ Q.Sprite.extend("Spaceship", {
     Q.input.on("fire", this, function(){
       var offsetX = (this.p.dir == "right" ? 25 : -25);
       Q.stage().insert(new Q.Bullet(this.p.x + offsetX, this.p.y + 5, this.p.dir));
+      Q.audio.play("fireAux.mp3");
     });
     Q.input.on("S", this, function(){
       console.log("x: " + this.p.x);
@@ -478,6 +479,7 @@ Q.Sprite.extend("Spaceship", {
   },
 
   die: function(){
+    Q.audio.play("explosion.mp3");
     this.destroy();
   },
 
