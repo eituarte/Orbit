@@ -29,7 +29,7 @@ Q.Sprite.extend("Tunnel", {
     this._super({
       asset: paramAsset,
       x: paramX,
-      y: paramY, 
+      y: paramY,
       gravity:0,
       scale: 0.1,
       zIndex: z,
@@ -53,7 +53,7 @@ Q.Sprite.extend("Wormhole", {
     this._super({
       asset: paramAsset,
       x: paramX,
-      y: paramY, 
+      y: paramY,
       gravity:0,
       scale: 0.4,
       zIndex: 3
@@ -63,7 +63,7 @@ Q.Sprite.extend("Wormhole", {
     this.p.h = 5000;
     this.p.w = 5000;
     // Aumentar w y h para que colisione en cualquier caso.
-    // Al colisionar, aumentar escala y comenzar event horizon, 
+    // Al colisionar, aumentar escala y comenzar event horizon,
     // luego ya se eliminará wormhole y podrá salir por patas
   }
 });
@@ -121,7 +121,7 @@ Q.Sprite.extend("Blackhole", {
     this._super({
       asset: paramAsset,
       x: paramX,
-      y: paramY, 
+      y: paramY,
       gravity: 0,
       scale: paramScale,
       created: false,
@@ -188,13 +188,13 @@ Q.Sprite.extend("QuarterStarfield", {
       this.animate({scale: 3, opacity: 0}, 4); // Extendemos hacia fuera para dar efecto de túnel
     }});
     this.animate({angle: this.p.angle}); // Rotamos en función del side
-    
+
     var self = this;
     setTimeout(function(){
       self.destroy(); // A los 4 segundos muere
     }, 4000);
   },
-  step: function(){    
+  step: function(){
   }
 });
 
@@ -214,7 +214,7 @@ Q.Sprite.extend("EventHorizon", {
     this.add('animation, tween');
     this.p.sensor=true;
     this.animate({opacity: 0.5}, 2, {callback: function(){
-    }}); 
+    }});
     this.animate({angle: -1000}, 80); // Molaría que diese vueltas en loop
     Q.state.set('eventHorizon', this);
   },
@@ -280,7 +280,7 @@ Q.state.set({
 
 function radar(x){
   var orbits = Q.state.get("orbits");
-    
+
     if(x > orbits["1"].x1 && x < orbits["1"].x2){
       //console.log("En órbita de planeta 1");
       Q.state.set("nPlanet", 1);
@@ -332,8 +332,6 @@ Q.Sprite.extend("Spaceship", {
       gravity:0,
       scale: 0.5,
       dir: "right",
-      life: 100,
-      oxygen: 100,
       t: 0,
       m: 0,
       zIndex: z,
@@ -341,11 +339,11 @@ Q.Sprite.extend("Spaceship", {
     });
     this.add('2d, animation, tween');
     this.play("right");
-    
+
     this.on('hit.sprite', function(collision) {
       if(collision.obj.isA('Rocket')) {
            this.vx += 20;
-           this.vy += 20; 
+           this.vy += 20;
            collision.obj.destroy();
       }else{
         if(collision.obj.isA('Debris')) {
@@ -353,30 +351,35 @@ Q.Sprite.extend("Spaceship", {
               // Colisión o bien buena o bien mala
               if(collision.obj.p.scale <= 1.8 && collision.obj.p.scale >= 1.2){
                 var p = Q.state.get("player");
+                var life = p.spaceSuit - collision.obj.p.damage;
+                if(life < 0 ) life = 0;
                 var player = {
                   oxygen: p.oxygen,
-                  spaceSuit: p.spaceSuit - collision.obj.p.damage
+                  spaceSuit: life
                 }
                 Q.state.set("player", player); // Dañamos la nave con el daño que haga el objeto
                 console.log('d '+ collision.obj.p.damage);
-                console.log('l '+ this.p.life);
+                console.log('l '+ Q.state.get("player").spaceSuit);
                 collision.obj.destroy();
                 if(player.spaceSuit <= 0){ // Perdemos la partida si nos quedamos sin nave
+                  Q.audio.play("explosion.mp3");
                   this.destroy();
                 }
                 console.log("Has colisionado con un objeto3D");
               }
             }
             else if(collision.obj.p.dim == "2D"){
-              console.log('l '+ this.p.life);
+              console.log('l '+ Q.state.get("player").spaceSuit);
               var p = Q.state.get("player");
+              var life = p.spaceSuit - collision.obj.p.damage;
+              if(life < 0 ) life = 0;
               var player = {
                 oxygen: p.oxygen,
-                spaceSuit: p.spaceSuit - collision.obj.p.damage
+                spaceSuit: life
               }
               Q.state.set("player", player); // Dañamos la nave con el daño que haga el objeto
               console.log('d '+ collision.obj.p.damage);
-              console.log('l '+ this.p.life);
+              console.log('l '+ Q.state.get("player").spaceSuit);
               collision.obj.destroy();
               if(player.spaceSuit <= 0){ // Perdemos la partida si nos quedamos sin nave
                 Q.audio.play("explosion.mp3");
@@ -456,12 +459,9 @@ Q.Sprite.extend("Spaceship", {
       console.log("x: " + this.p.x);
       console.log("y: " + this.p.y);
     });
+
     Q.state.on("change", function(){
-        var p = Q.state.get("player");
-        Q.stageScene("RADAR", 1, {
-          textShip: p.spaceSuit,
-          textOxygen: p.oxygen
-        });
+        Q.stageScene("RADAR", 1);
     });
 
     this.on("bump.top, bump.bottom, bump.left, bump.right", this, function(collision){
@@ -484,7 +484,7 @@ Q.Sprite.extend("Spaceship", {
           //}});
           Q.state.set("nPlanet", "0");
         }});
-        
+
       }
       if(collision.obj.isA("Blackhole")){
         collision.obj.destroy();
@@ -514,6 +514,7 @@ Q.Sprite.extend("Spaceship", {
     //if(Q.state.get("dim") == "2D"){ // Activamos el radar cuando no esté en agujero negro
       radar(this.p.x);
     //}
+    //
 
     if(this.p.vx != 0 && this.p.m%16*60 == 0)
         Q.state.set("orbimeters", Math.trunc(150000 - this.p.x));
@@ -543,12 +544,12 @@ Q.Sprite.extend("Spaceship", {
         Q.state.set("distanceToRadius", Math.trunc(d));
           //console.log("Distancia: " + d);
           //console.log("Distancia mínima: " + planets[nPlanet].d);
-     
+
       // Si ha entrado en órbita (la distancia al planeta es menor que la distancia de órbita (planets[nPlanet].d)) y no ha llegado a la superficie (usamos el radio)
       if (d < planets[nPlanet].d && !(d > -planets[nPlanet].r && d < planets[nPlanet].r)){
             //console.log("Has entrado en el campo gravitatorio");
         // Calculamos distancias
-        
+
 
         var dx = planets[nPlanet].x - this.p.x;
         var dy = planets[nPlanet].y - this.p.y;
@@ -582,19 +583,29 @@ Q.Sprite.extend("Spaceship", {
     }
     else if (nPlanet == 0){
 
-    }  
+    }
 
     // Comprobamos que no se salga del mapa
     if(this.p.y < 10){
       this.p.y = 10;
-    } 
+    }
     if(this.p.y > Q.height - 10){
       this.p.y = Q.height - 10;
     }
 
-    // 
+    //
     if(this.p.x <= Q.state.get("minDistanceX")){
       this.p.x = Q.state.get("minDistanceX");
+    }
+
+    //comprobamos el tiempo para reducir la cantidad de oxígeno
+    if(this.p.m%500 == 0){
+      var player = Q.state.get('player');
+      player.oxygen -= 1;
+      Q.state.set('player', player);
+      if(player.oxygen == 0){
+        this.destroy();
+      }
     }
   }
 
@@ -640,7 +651,7 @@ Q.Sprite.extend("Bullet", {
         this.destroy();
       }
     }/*else{
-      var evH = Q.state.get('eventHorizon'); 
+      var evH = Q.state.get('eventHorizon');
       // Si se sale de la pantalla o si llega al medio
       if(this.p.y < 0 || this.p.y>screen.height || (this.p.x == evH.p.x && this.p.y == evH.p.y)){
         this.destroy();
@@ -740,7 +751,7 @@ Q.Sprite.extend("Debris", {
         }});
       }});
     }
-    this.animate({opacity: 1}, 2); 
+    this.animate({opacity: 1}, 2);
     this.animate({angle: -3000}, 80); // Molaría que diese vueltas en loop
   },
   step: function(dt){
@@ -754,8 +765,8 @@ Q.Sprite.extend("Debris", {
     }
   },
   hitBullet: function(){
-    var posX = this.p.x; 
-    var posY = this.p.y; 
+    var posX = this.p.x;
+    var posY = this.p.y;
     if(this.p.name == "meteorite"){
       if(this.p.scale != 0.2){
         //VELOCIDADES 1
@@ -815,7 +826,7 @@ Q.Sprite.extend("Debris", {
       }
     }
     this.destroy();
-  }, 
+  },
 
 });
 
@@ -885,7 +896,7 @@ Q.Sprite.extend("DebrisSpawner", {
 Q.component("defaultEnemy",{
   added:function(){
     this.entity.on("bump.left, bump.right, bump.bottom",function(collision) {
-        if(collision.obj.isA("Mario") || collision.obj.isA("Prost")) { 
+        if(collision.obj.isA("Mario") || collision.obj.isA("Prost")) {
             collision.obj.die();
         }
         if(collision.obj.isA("Spaceship")){
@@ -896,20 +907,6 @@ Q.component("defaultEnemy",{
 });
 
 Q.scene("RADAR", function(stage){
-
-  var orbimeters = Q.state.get("orbimeters");
-  var textOrbimeters = new Q.UI.Text({family: "ethnocentric", x: Q.width - 30, y: 10, label: "Orbimeters to Station: " + orbimeters, color: "#FFDA6C", outlineWidth: 3, size: 14, align: "right"});
-  stage.insert(textOrbimeters);
-
-  // Datos de la nave
-  var player = Q.state.get("player");
-  var oxygen = player["oxygen"];
-  var textOxygen = new Q.UI.Text({family: "ethnocentric", x: 30, y: 40, label: "Oxygen: " + oxygen + "%", color: "#FFDA6C", outlineWidth: 3, size: 14, align: "left"});
-  stage.insert(textOxygen);
-
-  var ship = player["spaceSuit"];
-  var textShip = new Q.UI.Text({family: "ethnocentric", x: 30, y: 60, label: "Ship: " + ship + "%", color: "#FFDA6C", outlineWidth: 3, size: 14, align: "left"});
-  stage.insert(textShip);
 
   var n = Q.state.get("nPlanet");
 
@@ -930,7 +927,7 @@ Q.scene("RADAR", function(stage){
     var textDistanceRadius = new Q.UI.Text({family: "ethnocentric",x: Q.width/2, y: 40, label: "Distance to core: " + distanceToRadius, color: "#FFDA6C", outlineWidth: 3, size: 14, align: "center"});
     var textOrbit = new Q.UI.Text({family: "ethnocentric",x: Q.width/2, y: 60, label: "Orbit: " + planetOrbit, color: "#FFDA6C", outlineWidth: 3, size: 14, align: "center"});
     var textGravity = new Q.UI.Text({family: "ethnocentric",x: Q.width/2, y: 80, label: "Gravity: " + planetGravity, color: "#FFDA6C", outlineWidth: 3, size: 14, align: "center"});
-    
+
     stage.insert(textName);
     stage.insert(textRadius);
     stage.insert(textDistanceRadius);
@@ -938,10 +935,36 @@ Q.scene("RADAR", function(stage){
     stage.insert(textGravity);
   }
 });
+
+Q.scene("HUD", function(stage){
+
+  var orbimeters = Q.state.get("orbimeters");
+  var textOrbimeters = new Q.UI.Text({family: "ethnocentric", x: Q.width - 30, y: 10, label: "Orbimeters to Station: " + orbimeters, color: "#FFDA6C", outlineWidth: 3, size: 14, align: "right"});
+  stage.insert(textOrbimeters);
+
+  // Datos de la nave
+  var player = Q.state.get("player");
+  var oxygen = player["oxygen"];
+  var textOxygen = new Q.UI.Text({family: "ethnocentric", x: 30, y: 40, label: "Oxygen: " + oxygen + "%", color: "#FFDA6C", outlineWidth: 3, size: 14, align: "left"});
+  stage.insert(textOxygen);
+
+  var ship = player["spaceSuit"];
+  var textShip = new Q.UI.Text({family: "ethnocentric", x: 30, y: 60, label: "Ship: " + ship + "%", color: "#FFDA6C", outlineWidth: 3, size: 14, align: "left"});
+  stage.insert(textShip);
+
+  Q.state.on("change", function(){
+    var p = Q.state.get("player");
+    var orbimeters = Q.state.get("orbimeters");
+    textOrbimeters.p.label = "Orbimeters to Station: " + orbimeters;
+    textOxygen.p.label = "Oxygen: " + p.oxygen + "%";
+    textShip.p.label = "Ship: " + p.spaceSuit + "%";
+  });
+
+});
 /*
 Q.scene("HUD",function(stage) {
 
-  
+
   // Contador descendente del poder del martillo
   var SpaceshipSecs = Q.state.get("Spaceship");
   var remainingSecs = new Q.UI.Text({x: Q.width/2, y: 90, label: SpaceshipSecs, color: "#707070", outlineWidth: 3});
@@ -965,13 +988,13 @@ Q.scene("HUD",function(stage) {
 
 
 Q.load(["Starship_Pilot.png", "Space_Captain.png", "Space_Commander.png", "fireAux.mp3","explosion.mp3", "interstellar.mp3", "spaceship.png", "spaceship.json", "1.png","2.png", "3.png","4.png","5.png","6.png","7.png",
-  "8.png","blackhole.png", "quarterStarfield.png", 
-  "quarterStarfield2.png", "vortex.png", "wormhole.png", 
-  "interiorCircularInfluence.png", "exteriorCircularInfluence.png", 
-  "galaxy.png", "Spaceship.png", "Spaceship.json", "thunder.png", 
+  "8.png","blackhole.png", "quarterStarfield.png",
+  "quarterStarfield2.png", "vortex.png", "wormhole.png",
+  "interiorCircularInfluence.png", "exteriorCircularInfluence.png",
+  "galaxy.png", "Spaceship.png", "Spaceship.json", "thunder.png",
   "thunder.json", "prost_small.png", "prost.json", "mainTitle.png",
-  "princess.png","coin.png","coin.json","mario_small.png", 
-  "mario_small.json", "goomba.png", "goomba.json", "bloopa.png", 
+  "princess.png","coin.png","coin.json","mario_small.png",
+  "mario_small.json", "goomba.png", "goomba.json", "bloopa.png",
   "bloopa.json", "bgProst.png", "fondo.png", "debris1.png", "debris2.png",  "bgHammer.png", "bullet.png", "rocket.png", "oxygen.png"], function(){
         Q.compileSheets("prost_small.png", "prost.json");
         Q.compileSheets("Spaceship.png", "Spaceship.json");
@@ -988,14 +1011,14 @@ Q.load(["Starship_Pilot.png", "Space_Captain.png", "Space_Commander.png", "fireA
     setTimeout(function(){
       Q.Dialogue.play("conversacion1");
     }, 3000);
-    
+
     //Q.debug = true;
 });
 
 
 Q.scene("level1",function(stage) {
       stage.insert(new Q.Repeater({ asset: "bgProst.png", speedX: 0.2, speedY: 0.2, type: 0 }));
-      
+
       //var wormhole=stage.insert(new Q.Wormhole(550, 320, "wormhole.png"));
       //var blackhole=stage.insert(new Q.Blackhole(150, 320, "interiorCircularInfluence.png", 1));
       //var vortex=stage.insert(new Q.EventHorizon(850, 320));
@@ -1026,8 +1049,8 @@ Q.scene('endGame',function(stage) {
   }));
 
   var button = container.insert(new Q.UI.Button({ x: 0, y: 0, fill: "#CCCCCC",
-                                                  label: "Play Again" }));         
-  var label = container.insert(new Q.UI.Text({x:5, y: -10 - button.p.h, 
+                                                  label: "Play Again" }));
+  var label = container.insert(new Q.UI.Text({x:5, y: -10 - button.p.h,
                                                    label: stage.options.label, color: "#FFFFFF" }));
   button.on("click",function() {
     Q.clearStages();
@@ -1036,7 +1059,8 @@ Q.scene('endGame',function(stage) {
     //Q.audio.play('music_main.mp3',{ loop: true });
     Q.stageScene('level1', 0);
     //Q.stageScene('playerScene', 3);
-    Q.stageScene('RADAR', 2);
+    Q.stageScene('HUD', 2);
+    Q.stageScene('RADAR', 3);
   });
 
 
@@ -1099,11 +1123,12 @@ Q.scene('menu',function(stage) {
       distanceToRadius: 0,
       minDistanceX: 0
     });
-  
+
     Q.stageScene('level1', 0);
     //Q.stageScene('playerScene', 3);
     //Q.audio.play("interstellar.mp3", {loop: true});
-    Q.stageScene('RADAR', 2);
+    Q.stageScene('HUD', 2);
+    Q.stageScene('RADAR', 3);
   });
 
 });
