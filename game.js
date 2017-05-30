@@ -341,16 +341,21 @@ Q.Sprite.extend("Spaceship", {
     this.play("right");
 
     this.on('hit.sprite', function(collision) {
+      var p = Q.state.get("player");
       if(collision.obj.isA('Rocket')) {
-           this.vx += 20;
-           this.vy += 20;
-           collision.obj.destroy();
+        var life = p.spaceSuit + 20;
+        if(life > 100 ) life = 100;
+        var player = {
+          oxygen: p.oxygen,
+          spaceSuit: life
+        }
+        Q.state.set("player", player);
+        collision.obj.destroy();
       }else{
         if(collision.obj.isA('Debris')) {
             if(collision.obj.p.dim == "3D" ){
               // Colisión o bien buena o bien mala
               if(collision.obj.p.scale <= 1.8 && collision.obj.p.scale >= 1.2){
-                var p = Q.state.get("player");
                 var life = p.spaceSuit - collision.obj.p.damage;
                 if(life < 0 ) life = 0;
                 var player = {
@@ -370,7 +375,6 @@ Q.Sprite.extend("Spaceship", {
             }
             else if(collision.obj.p.dim == "2D"){
               console.log('l '+ Q.state.get("player").spaceSuit);
-              var p = Q.state.get("player");
               var life = p.spaceSuit - collision.obj.p.damage;
               if(life < 0 ) life = 0;
               var player = {
@@ -388,6 +392,13 @@ Q.Sprite.extend("Spaceship", {
             }
         }else{
           if(collision.obj.isA('OxygenCharge')) {
+            var oxy = p.oxygen + 20;
+            if(oxy > 100 ) oxy = 100;
+            var player = {
+              oxygen: oxy,
+              spaceSuit: p.spaceSuit
+            }
+            Q.state.set("player", player);
             this.p.oxygen += 20;
             collision.obj.destroy();
           }
