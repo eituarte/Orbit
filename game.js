@@ -501,7 +501,7 @@ Q.Sprite.extend("Spaceship", {
         Q.state.set("distanceToRadius", Math.trunc(d));
           //console.log("Distancia: " + d);
           //console.log("Distancia mínima: " + planets[nPlanet].d);
-      if(planets[nPlasnet].g == 0){ // Si es un agujero negro, atraemos
+      if(planets[nPlanet].g == 0){ // Si es un agujero negro, atraemos
         this.animate({x: planets[nPlanet].x, y: planets[nPlanet].y}, 2);
       }
       // Si ha entrado en órbita (la distancia al planeta es menor que la distancia de órbita (planets[nPlanet].d)) y no ha llegado a la superficie (usamos el radio)
