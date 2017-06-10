@@ -54,7 +54,7 @@ Q.Sprite.extend("Explosion", {
     else{
       this.play("explode_and_fire");
     }
-    Q.audio.play("explosion.mp3");
+    //Q.audio.play("explosion.mp3");
   },
   end: function(){
     this.destroy();
@@ -110,7 +110,7 @@ Q.Sprite.extend("Wormhole", {
       x: paramX,
       y: paramY, 
       gravity:0,
-      scale: 0.4,
+      scale: 0.2,
       zIndex: 3
     });
     this.add('2d, animation, tween');
@@ -152,7 +152,9 @@ function createPlanets(stage){
       orbits[i] = {x1: p.x - 2*(p.r + p.d), x2: p.x + 2*(p.r + p.d)};
   }
   var wh = planets["wormhole"];
-  stage.insert(new Q.Blackhole(wh.x, wh.y, "interiorCircularInfluence.png", 1, 1));
+  //stage.insert(new Q.Blackhole(wh.x, wh.y, "interiorCircularInfluence.png", 1, 1));
+  console.log(wh.x + " " + wh.y);
+  stage.insert(new Q.Wormhole(wh.x, wh.y, "wormhole.png", 5));
   orbits["wormhole"] = {x1: wh.x - 2*(wh.r + wh.d), x2: wh.x + 2*(wh.r + wh.d)};
   Q.state.set("orbits", orbits);
 }
@@ -392,7 +394,8 @@ Q.Sprite.extend("Spaceship", {
       t: 0,
       m: 0, // Factor de tiempo para actualizar las distancias
       zIndex: z,
-      dimension: paramDim
+      dimension: paramDim,
+      stuck: false
     });
     this.add('2d, animation, tween');
     this.play("right");
@@ -423,7 +426,7 @@ Q.Sprite.extend("Spaceship", {
                 collision.obj.destroy(); // Eliminamos la basura espacial
 
                 if(player.spaceSuit <= 0){ // Perdemos la partida si nos quedamos sin nave
-                  Q.audio.play("explosion.mp3");
+                  //Q.audio.play("explosion.mp3");
                   this.destroy();
                   // Llamar a EndGame
                 }
@@ -443,7 +446,7 @@ Q.Sprite.extend("Spaceship", {
               //console.log('l '+ Q.state.get("player").spaceSuit);
               collision.obj.destroy(); // Eliminamos la basura
               if(player.spaceSuit <= 0){ // Perdemos la partida si nos quedamos sin nave
-                Q.audio.play("explosion.mp3");
+                //Q.audio.play("explosion.mp3");
                 this.destroy();
                 // Llamar a EndGame
               }
@@ -473,9 +476,20 @@ Q.Sprite.extend("Spaceship", {
     Q.input.on("up", this, function(){
       if(this.p.dimension == "2D"){
         this.play("go_" + this.p.dir);
-        this.p.vy -= 80;
-        if(this.p.vy < -320){
-          this.p.vy = -320;
+        // Si nos hemos chocado con un planeta
+        if(this.p.stuck){
+          if(this.p.directions.up == true){
+            this.p.y -= 10;
+            this.p.vy = -360; // Propulsamos con una velocidad relativamente alta para salir de órbita. 
+            // Se podría parametrizar en base a la atracción gravitatoria!
+            this.p.stuck = false;
+          }
+        }
+        else{ // Comportamiento ordinario. Hasta 4 propulsiones
+          this.p.vy -= 80;
+          if(this.p.vy < -320){
+            this.p.vy = -320;
+          }
         }
       }
       else{
@@ -486,9 +500,20 @@ Q.Sprite.extend("Spaceship", {
     Q.input.on("down", this, function(){
       if(this.p.dimension == "2D"){
         this.play("go_" + this.p.dir);
-        this.p.vy += 80;
-        if(this.p.vy > 320){
-          this.p.vy = 320;
+        // Si nos hemos chocado con algún planeta
+        if(this.p.stuck){
+          if(this.p.directions.up == false){
+            this.p.y += 10;
+            this.p.vy = 360; // Propulsamos con una velocidad relativamente alta para salir de órbita. 
+            // Se podría parametrizar en base a la atracción gravitatoria!
+            this.p.stuck = false;
+          }
+        }
+        else{ // Comportamiento ordinario. Hasta 4 propulsiones
+          this.p.vy += 80;
+          if(this.p.vy > 320){
+            this.p.vy = 320;
+          }
         }
       }
       else{
@@ -500,9 +525,20 @@ Q.Sprite.extend("Spaceship", {
       this.p.dir = "left";
       if(this.p.dimension == "2D"){
         this.play("go_" + this.p.dir);
-        this.p.vx -= 80;
-        if(this.p.vx < -320){
-          this.p.vx = -320;
+
+        if(this.p.stuck){
+          if(this.p.directions.right == false){
+            this.p.x -= 10;
+            this.p.vx = -360; // Propulsamos con una velocidad relativamente alta para salir de órbita. 
+            // Se podría parametrizar en base a la atracción gravitatoria!
+            this.p.stuck = false;
+          }
+        }
+        else{
+          this.p.vx -= 80;
+          if(this.p.vx < -320){
+            this.p.vx = -320;
+          }
         }
       }
       else{
@@ -514,9 +550,21 @@ Q.Sprite.extend("Spaceship", {
       this.p.dir = "right";
       if(this.p.dimension == "2D"){
         this.play("go_" + this.p.dir);
-        this.p.vx += 80;
-        if(this.p.vx > 320){
-          this.p.vx = 320;
+
+        // Si nos hemos chocado con algún planeta
+        if(this.p.stuck){
+          if(this.p.directions.right == true){
+            this.p.x += 10; 
+            this.p.vx = 360; // Propulsamos con una velocidad relativamente alta para salir de órbita. 
+            // Se podría parametrizar en base a la atracción gravitatoria!
+            this.p.stuck = false;
+          }
+        }
+        else{
+          this.p.vx += 80;
+          if(this.p.vx > 320){
+            this.p.vx = 320;
+          }        
         }
       }
       else{
@@ -528,7 +576,7 @@ Q.Sprite.extend("Spaceship", {
     Q.input.on("fire", this, function(){
       var offsetX = (this.p.dir == "right" ? 25 : -25);
       Q.stage().insert(new Q.Bullet(this.p.x + offsetX, this.p.y + 5, this.p.dir , this.p.x, this.p.y));
-      Q.audio.play("fireAux.mp3"); // Reproducimos audio de blaster
+      //Q.audio.play("fireAux.mp3"); // Reproducimos audio de blaster
     });
 
     // Esto es por propósitos de desarrollador. Para saber las coordenadas de la nave en un momento concreto
@@ -547,8 +595,11 @@ Q.Sprite.extend("Spaceship", {
         // Primero escalar el agujero negro
           // Después crear el resto de elementos
         this.p.zIndex = 30;
-        this.animate({x: collision.obj.p.x, y: collision.obj.p.y}, 2);
-        collision.obj.animate({scale: 40}, 2, Q.Easing.Quadratic.InOut, {callback: function(){
+        this.animate({x: collision.obj.p.x, y: collision.obj.p.y + 200}, 5, {callback: function(){
+          // Cambiamos el modo de juego a 3D
+          Q.state.set("dim", "3D");
+        }});
+        collision.obj.animate({scale: 70, opacity: 0.5}, 8, Q.Easing.Quadratic.InOut, {callback: function(){
           collision.obj.destroy();
           // Entramos en el horizonte de sucesos (túnel)
           this.stage.insert(new Q.EventHorizon(collision.obj.p.x, collision.obj.p.y, 1, 1));
@@ -556,7 +607,6 @@ Q.Sprite.extend("Spaceship", {
           this.stage.insert(new Q.DebrisSpawner(this, "3D", this.p.x, this.p.y));
           // Permitimos hasta 10 elementos de basura espacial por el túnel
           Q.state.set("numDebris", 10);
-          Q.state.set("dim", "3D"); // Cambiamos el modo de juego a 3D
           Q.state.set("nPlanet", "0"); // Desactivamos el radar de la nave
         }});
 
@@ -638,20 +688,22 @@ Q.Sprite.extend("Spaceship", {
             //console.log("Has salido del campo gravitatorio");
       }
       // Si ha llegado a la superficie (Ha chocado con el planeta)
-      if(d > -planets[nPlanet].r && d < planets[nPlanet].r && planets[nPlanet].g != 0){
+      if(d > -planets[nPlanet].r && d < planets[nPlanet].r && planets[nPlanet].g != 0 && !this.p.stuck){
         this.p.vx = 0;
         this.p.vy = 0;
-        /*
-        var self = this;
-          if(self.x >= (planets[nPlanet].x + planets[nPlanet].r)){ // Propulsar a la derecha
-            self.animate({x: self.p.x + planets[nPlanet].d/2}, 2, Q.Easing.InOut);
-          }
-          else{
-            self.animate({x: self.p.x - planets[nPlanet].d/2}, 2, Q.Easing.InOut);
-          }
-          this.p.vx = 0;
-          this.p.vy = 0;
-          */
+        this.p.stuck = true;
+        console.log("Hemos chocado!");
+        // Ahora guardamos las direcciones en las que puede despegar
+        this.p.directions = { // Inicializamos a izquierda y abajo (se pueden usar las teclas UP y LEFT)
+          right: false,
+          up: false
+        }
+        if(planets[nPlanet].x - this.p.x <= 0){ // Propulsar hacia la derecha
+          this.p.directions.right = true;
+        }
+        if(planets[nPlanet].y - this.p.y >= 0){ // Propulsar hacia arriba
+          this.p.directions.up = true;
+        }
         // Escapar del planeta con propulsión (gasta nave)
       }
     }
@@ -1244,7 +1296,7 @@ Q.scene('menu',function(stage) {
 
   button.on("click",function() {
     Q.stageScene('Intro', 0);
-    Q.audio.play("interstellar.mp3", {loop: true});
+    //Q.audio.play("interstellar.mp3", {loop: true});
   });
 
 });
