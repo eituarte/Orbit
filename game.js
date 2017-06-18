@@ -58,7 +58,8 @@ Q.Sprite.extend("Explosion", {
     else{
       this.play("explode_and_fire");
     }
-    //Q.audio.play("explosion.mp3");
+    if(Q.state.get("audio") == "on")
+      Q.audio.play("explosion.mp3");
   },
   end: function(){
     this.destroy();
@@ -411,7 +412,8 @@ Q.Sprite.extend("Spaceship", {
       m: 0, // Factor de tiempo para actualizar las distancias
       z: zIndex,
       dimension: paramDim,
-      stuck: false
+      stuck: false,
+      conversation: false
     });
     this.add('2d, animation, tween');
     this.play("right");
@@ -590,9 +592,10 @@ Q.Sprite.extend("Spaceship", {
     });
     // Cuando se dispara con SPACE, creamos una bala con la dirección correcta
     Q.input.on("fire", this, function(){
-      var offsetX = (this.p.dir == "right" ? 75 : -75);
+      var offsetX = (this.p.dir == "right" ? 25 : -25);
       Q.stage().insert(new Q.Bullet(this.p.x + offsetX, this.p.y + 5, this.p.dir , this.p.x, this.p.y));
-      //Q.audio.play("fireAux.mp3"); // Reproducimos audio de blaster
+      if(Q.state.get("audio") == "on")
+        Q.audio.play("fireAux.mp3"); // Reproducimos audio de blaster
     });
 
     // Esto es por propósitos de desarrollador. Para saber las coordenadas de la nave en un momento concreto
@@ -630,6 +633,12 @@ Q.Sprite.extend("Spaceship", {
       if(Q.state.get("modoDios") == "on"){
       }
     });
+    Q.input.on("EIGHT", this, function(){
+      Q.state.set("audio", "on");
+    });
+    Q.input.on("NINE", this, function(){
+      Q.state.set("audio", "off");
+    });
 
     // Actualizamos RADAR cada vez que ocurra un cambio en Q.state
     Q.state.on("change", function(){
@@ -640,8 +649,6 @@ Q.Sprite.extend("Spaceship", {
       if(collision.obj.isA("Wormhole")){
         // Primero escalar el agujero negro
           // Después crear el resto de elementos
-        // Q.Dialogue.play("conversacion2"); // Reproducimos la siguiente conversación. Más tarde llevamos un contador en Q.state
-        
         this.animate({x: collision.obj.p.x, y: collision.obj.p.y + 200}, 5, {callback: function(){
           // Cambiamos el modo de juego a 3D
           Q.state.set("dim", "3D");
@@ -671,11 +678,13 @@ Q.Sprite.extend("Spaceship", {
         this.p.dimension = "2D";
         this.p.x *= 2; // Atravesamos el espacio-tiempo
         Q.state.inc("level");
+        Q.Dialogue.play("2");
         this.animate({scale: 0.5}, 2, Q.Easing.Quadratic.Out);
         Q.state.set("minDistanceX", this.p.x - 200);
       }
       else{
         this.p.dimension = "3D";
+        Q.Dialogue.play("wormhole");
         this.animate({scale: 1}, 2, Q.Easing.Quadratic.Out);
       }
     });
@@ -1038,7 +1047,7 @@ Q.Sprite.extend("Debris", {
           Q.stage().insert(new Q.Debris(posX, posY, velX1, velY1, this.p.name, this.p.asset, 0.2, 5, 4, this.p.dim));
           Q.stage().insert(new Q.Debris(posX, posY, velX2, velY2, this.p.name, this.p.asset, 0.2, 5, 4, this.p.dim));
         }
-      }
+      
     }else{ // Si no es un meteorito
       var dirX = Math.round(Math.random());
       if(dirX == 0){
@@ -1061,12 +1070,11 @@ Q.Sprite.extend("Debris", {
     }
     this.destroy();
   }
-else{
+  else{
       console.log("colision bullet - debris en 3D");
       this.destroy();
     }
   }
-
 });
 
 // Clase que va introducionde objetos Debris de forma aleatoria
@@ -1217,25 +1225,16 @@ Q.load(["space_station1.png", "space_station2.png", "space_station3.png", "explo
   "8.png","blackhole.png", "quarterStarfield.png",
   "quarterStarfield2.png", "vortex.png", "wormhole.png",
   "interiorCircularInfluence.png", "exteriorCircularInfluence.png",
-  "galaxy.png", "Spaceship.png", "Spaceship.json", "thunder.png",
-  "thunder.json", "prost_small.png", "prost.json", "mainTitle.png",
-  "princess.png","coin.png","coin.json","mario_small.png",
-  "mario_small.json", "goomba.png", "goomba.json", "bloopa.png",
-  "bloopa.json", "bgProst.png", "fondo.png", "debris1.png",
-  "debris2.png", "debris1.json", "debris2.json", "bgHammer.png", "bullet.png", "rocket.png", "oxygen.png", "leftarrow.png", "rightarrow.png"], function(){
-        Q.compileSheets("prost_small.png", "prost.json");
+  "Spaceship.png", "Spaceship.json",
+  "bgProst.png", "fondo.png", "debris1.png",
+  "debris2.png", "debris1.json", "debris2.json", "bullet.png", "rocket.png", "oxygen.png", "leftarrow.png", "rightarrow.png"], function(){
         Q.compileSheets("Spaceship.png", "Spaceship.json");
-        Q.compileSheets("thunder.png", "thunder.json");
-        Q.compileSheets("mario_small.png", "mario_small.json");
-        Q.compileSheets("goomba.png", "goomba.json");
-        Q.compileSheets("bloopa.png", "bloopa.json");
-        Q.compileSheets("coin.png", "coin.json");
         Q.compileSheets("spaceship.png", "spaceship.json");
         Q.compileSheets("explosion.png", "explosion.json");
         Q.compileSheets("debris1.png", "debris1.json");
         Q.compileSheets("debris2.png", "debris2.json");
-
-    //Q.audio.play('interstellar.mp3',{ loop: true });
+    if(Q.state.get("audio") == "on")
+      Q.audio.play('interstellar.mp3',{ loop: true });
     Q.stageScene("menu");
     
     //Q.debug = true;
@@ -1258,7 +1257,7 @@ Q.scene("Intro",function(stage) {
      
   // A los 2 segundos, comienza el diálogo
   setTimeout(function(){
-      Q.Dialogue.play("conversacion1");
+      Q.Dialogue.play("1");
   }, 2000);
   
   var s1, s2, s3;
@@ -1399,7 +1398,8 @@ Q.scene("Intro",function(stage) {
   
     Q.stageScene('level1', 0);
     //Q.stageScene('playerScene', 3);
-    //Q.audio.play("interstellar.mp3", {loop: true});
+    if(Q.state.get("audio") == "on")
+      Q.audio.play("interstellar.mp3", {loop: true});
     Q.stageScene('HUD', 2);
     Q.stageScene('RADAR', 3);
 
@@ -1456,27 +1456,28 @@ Q.scene('menu',function(stage) {
 
   enterText.on("click",function() {
     Q.stageScene('Intro', 0);
-    //Q.audio.play("interstellar.mp3", {loop: true});
+    if(Q.state.get("audio") == "on")
+      Q.audio.play("interstellar.mp3", {loop: true});
   });
 
   buttonLM.on("click",function() {
-    var m = Q.state.get('music');
+    var m = Q.state.get('audio');
     if(m){
-      Q.state.set('music', false);
+      Q.state.set('audio', "off");
       musicLabel.p.label = "OFF";
     }else{
-      Q.state.set('music', true);
+      Q.state.set('audio', "on");
       musicLabel.p.label = "ON";
     }
   });
 
   buttonRM.on("click",function() {
-    var m = Q.state.get('music');
+    var m = Q.state.get('audio');
     if(m){
-      Q.state.set('music', false);
+      Q.state.set('audio', "off");
       musicLabel.p.label = "OFF";
     }else{
-      Q.state.set('music', true);
+      Q.state.set('audio', "on");
       musicLabel.p.label = "ON";
     }
   });
