@@ -130,7 +130,7 @@ Q.Sprite.extend("Wormhole", {
 
 // Sprite de planeta
 Q.Sprite.extend("Planet", {
-  init: function(paramX, paramY, paramAsset, paramR, paramD, paramN, z){
+  init: function(paramX, paramY, paramAsset, paramR, paramD, paramN, z, paramRewards){
     this._super({
       asset: paramAsset,
       x: paramX,
@@ -138,9 +138,19 @@ Q.Sprite.extend("Planet", {
       d: paramD,
       r: paramR,
       n: paramN,
-      zIndex: z
+      zIndex: z,
+      nRewards: paramRewards,
+      ready: false,
+      t: 0
     });
     this.p.sensor = true;
+  },
+  step: function(dt){
+    this.p.t++;
+    if(this.p.nRewards > 0 && this.p.t%70 == 0){
+      this.stage.insert(new Q.OxygenCharge(this.p.x, this.p.y, true, this));
+      this.p.nRewards --;
+    }
   }
 });
 
@@ -153,7 +163,7 @@ function createPlanets(stage){
   var orbits = {};
   for(var i = 1; i < 8; i++){
     var p = planets[i];
-      stage.insert(new Q.Planet(p.x, p.y, i + ".png", p.r, p.d, i, 1));
+      stage.insert(new Q.Planet(p.x, p.y, i + ".png", p.r, p.d, i, 1, p.n));
       orbits[i] = {x1: p.x - 2*(p.r + p.d), x2: p.x + 2*(p.r + p.d)};
   }
   var wh = planets["wormhole"];
@@ -275,11 +285,11 @@ Q.Sprite.extend("EventHorizon", {
     this.add('animation, tween');
     this.p.sensor=true;
     // Hacemos que aparezca en pantalla de forma continua
-    this.animate({opacity: 0.5}, 2, {callback: function(){
+    this.animate({opacity: 0.8}, 2, {callback: function(){
 
     }}); 
     // Lo vamos girando con el tiempo
-    this.animate({angle: -1000}, 80); // Molaría que diese vueltas en loop
+    this.animate({angle: -150}, 8);
     // Guardamos el objeto en Q.state para posterior uso en modo 3D
     Q.state.set('eventHorizon', this);
   },
@@ -627,10 +637,13 @@ Q.Sprite.extend("Spaceship", {
     });
     Q.input.on("FOUR", this, function(){
       if(Q.state.get("modoDios") == "on"){
+        this.p.x = 9000;
       }
     });
     Q.input.on("FIVE", this, function(){
       if(Q.state.get("modoDios") == "on"){
+        this.p.x = 41000;
+        Q.state.set("level", 2);
       }
     });
     Q.input.on("EIGHT", this, function(){
@@ -649,14 +662,16 @@ Q.Sprite.extend("Spaceship", {
       if(collision.obj.isA("Wormhole")){
         // Primero escalar el agujero negro
           // Después crear el resto de elementos
+        var col = collision.obj;
         this.animate({x: collision.obj.p.x, y: collision.obj.p.y + 200}, 5, {callback: function(){
           // Cambiamos el modo de juego a 3D
           Q.state.set("dim", "3D");
+          
         }});
-        collision.obj.animate({scale: 70, opacity: 0.5}, 8, Q.Easing.Quadratic.InOut, {callback: function(){
+        collision.obj.animate({scale: 70, opacity: 0.5}, 6, Q.Easing.Quadratic.InOut, {callback: function(){
           collision.obj.destroy();
           // Entramos en el horizonte de sucesos (túnel)
-          this.stage.insert(new Q.EventHorizon(collision.obj.p.x, collision.obj.p.y, 1, 1));
+          this.stage.insert(new Q.EventHorizon(col.p.x, col.p.y, 1, 1));
           // Creamos un Spawner de basura en 3D
           this.stage.insert(new Q.DebrisSpawner(this, "3D", this.p.x, this.p.y));
           // Permitimos hasta 10 elementos de basura espacial por el túnel
@@ -910,7 +925,7 @@ Q.Sprite.extend("Rocket",{
 
 // Sprite carga de oxígeno (para restaurar el oxígeno de la nave)
 Q.Sprite.extend("OxygenCharge",{
-  init: function(paramX, paramY){
+  init: function(paramX, paramY, paramOrbit, paramPlanet){
     this._super({
       asset: 'oxygen.png',
       x: paramX,
@@ -919,13 +934,85 @@ Q.Sprite.extend("OxygenCharge",{
       vy: 0,
       name: 'oxygenCharge',
       scale: 0.2,
-      gravity: 0
+      gravity: 0,
+      orbit: paramOrbit,
+      planet: paramPlanet
     });
     this.add('2d, animation, tween');
     this.animate({angle: -3000}, 80);
     this.p.sensor=true;
+    if(this.p.orbit){
+      // Calcular arrays de posiciones de la órbita
+      this.p.u = new Array(); // Rellenaremos con las posiciones "verticales"
+      var alpha = Math.PI/2; // Iniciamos el desplazamiento a 90 grados
+      var incAlpha = Math.PI/200; // Calculamos el ángulo de rotación
+      var yIni = this.p.planet.p.y - this.p.planet.p.d;
+      alpha -= incAlpha;
+      var k = 0;
+      while(k < 200){
+        // Vamos añadiendo la coordenada y correspondiente.
+        // La calculamos con trigonometría para que los puntos de la circunferencia equidisten
+        this.p.u.push(yIni + (this.p.planet.p.d - Math.sin(alpha)*this.p.planet.p.d));
+        alpha -= incAlpha;
+        if(alpha <= 0){
+          alpha = 2*Math.PI - incAlpha; // Reseteamos a 360-incAlpha en el caso de que llegue a 0
+        }
+        k++;
+      }
+      // Ahora tenemos u[] lleno de las primeras coordenadas
+      // Necesitamos rellenar v[], que tendrá el doble de tamaño, con las coordenadas "x" de la circunferencia
+      // Ecuación de la circunferencia: (v - x)^2 + (u - y)^2 = r^2
+      this.p.v = new Array();
+      for (var i = this.p.u.length - 1; i >= 0; i--) {
+        // Despejar (v - x)
+        var vMx = Math.sqrt(this.p.planet.p.d*this.p.planet.p.d - (this.p.u[i] - this.p.planet.p.y)*(this.p.u[i] - this.p.planet.p.y));
+        // Calcular el valor de la derecha 
+        var v1 = vMx + this.p.planet.p.x;
+        // Ahora añadimos la coordenada al array
+        this.p.v.push(v1);
+      };
+      
+      for (var i = 0; i < this.p.u.length; i++) {
+        // Despejar (v - x)
+        var vMx = -Math.sqrt(this.p.planet.p.d*this.p.planet.p.d - (this.p.u[i] - this.p.planet.p.y)*(this.p.u[i] - this.p.planet.p.y));
+        // Calcular el valor de la izquierda
+        var v2 = this.p.planet.p.x + vMx;
+        // Ahora añadimos la coordenada al array
+        this.p.v.push(v2);
+      };
+      // Ahora tenemos dos arrays.
+      // Para que recorra la órbita, tenemos que recorrer de abajo a arriba, y de arriba a abajo el array u[]
+      // En cada pasada, acceder a la mitad de las coordenadas de v[] y repetir
+
+      // Declaramos unas coordenadas locales para el objeto
+      this.p.x = this.p.v[0];
+      this.p.y = this.p.u[0];
+      this.p.i = 0; // Índice de u[]. Será ascendente y descendente, alternando direcciones cuando llegue a los límites
+      this.p.j = 0; // Índice de v[]. Irá de 0 a 80, volviendo a 0 cada vez que se complete una vuelta a la órbita
+      
+      this.p.dirY = 1; // Dirección y del objeto
+    }
   },
   step: function(dt){
+    if(this.p.orbit){
+      // Recorrer arrays de posiciones de la órbita
+      this.p.y = this.p.u[this.p.i];
+      this.p.i += this.p.dirY;
+      if(this.p.dirY == 1 && this.p.i ==this.p.u.length){ // Si la i ha llegado a arriba
+        this.p.dirY = -1; // Ahora la i irá hacia abajo
+        this.p.i--;
+      }
+      if(this.p.dirY == -1 && this.p.i == -1){ // Si la i ha llegado a abajo
+        this.p.dirY = 1; // Ahora la i irá hacia arriba
+        this.p.i++;
+      }
+
+      this.p.x = this.p.v[this.p.j];
+      this.p.j++;
+      if(this.p.j == this.p.v.length){
+        this.p.j = 0;
+      }
+    }
   }
 });
 
@@ -1352,19 +1439,19 @@ Q.scene("Intro",function(stage) {
       nPlanet: 0, // Índice del planeta detectado por el radar
       planets: { // Coordenadas, distancia de órbita, radio del planeta
         0: {},
-        1: { x: 2000, y: 330, d: 400, r: 130, name: "Fiery", g: 9.8},
-        2: { x: 6000, y: 330, d: 450, r: 160, name: "Reddy", g: 6},
+        1: { x: 2000, y: 330, d: 400, r: 130, name: "Fiery", g: 9.8, n: 3},
+        2: { x: 6000, y: 330, d: 450, r: 160, name: "Reddy", g: 6, n: 2},
         wormhole : { x: 10540, y: 330, d: 850, r: 10, name: "Gargantua", g: 0},
         // Al pasar el agujero, se multiplica x 2 la spaceship.p.x
         // Lluvia de meteoritos en 21000
-        3: { x: 26840, y: 330, d: 500, r: 210, name: "Greeny", g: 4},
-        4: { x: 34040, y: 330, d: 350, r: 250, name: "Veggie", g: 8},
+        3: { x: 26840, y: 330, d: 500, r: 210, name: "Greeny", g: 4, n: 5},
+        4: { x: 34040, y: 330, d: 350, r: 250, name: "Veggie", g: 8, n: 4},
         wormhole2: { x: 42000, y: 330, d: 850, r: 10, name: "Ssakcalb", g: 0},
         // Al pasar el agujero, se multiplica x 2 la spaceship.p.x
         // Lluvia de meteoritos un poco más difícil en 84000
-        5: { x: 950040, y: 530, d: 600, r: 300, name: "Bluey", g: 2},
-        6: { x: 100200, y: 230, d: 400, r: 125, name: "Stormzy", g: 10},
-        7: { x: 110200, y: 30, d: 700, r: 350, name: "Purply", g: 12}
+        5: { x: 950040, y: 530, d: 600, r: 300, name: "Bluey", g: 2, n: 6},
+        6: { x: 100200, y: 230, d: 400, r: 125, name: "Stormzy", g: 10, n: 1},
+        7: { x: 110200, y: 30, d: 700, r: 350, name: "Purply", g: 12, n: 0}
       },
       debris: {
         1: {name: 'meteorite', asset:"debris1", damage: 30},
