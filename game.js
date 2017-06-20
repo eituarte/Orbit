@@ -150,8 +150,12 @@ Q.Sprite.extend("Planet", {
     if(this.p.nRewards > 0 && this.p.t%70 == 0){
       var debrisNum = Math.floor(Math.random() * 3) + 1;
       var debrisObj = Q.state.get('debris')[debrisNum];
+      var scale = 0.5;
+      if(debrisObj.name == "OxygenCharge"){
+        scale = 1;
+      }
       // paramX, paramY, paramVx, paramVy, paramName, paramSheet, paramScale, zIndex, paramMovType, paramType, paramPlanet
-      this.stage.insert(new Q.Debris(this.p.x, this.p.y, debrisObj.name, debrisObj.sheet, 0.3, 4, "Orbit", debrisObj.type, this));
+      this.stage.insert(new Q.Debris(this.p.x, this.p.y, debrisObj.name, debrisObj.sheet, scale, 4, "Orbit", debrisObj.type, this));
       //this.stage.insert(new Q.OxygenCharge(this.p.x, this.p.y, true, this));
       this.p.nRewards--;
     }
@@ -591,7 +595,7 @@ Q.Sprite.extend("Spaceship", {
       var p = Q.state.get("player");
       if(p.blaster > 0){
         p.blaster -= 5;
-        Q.stage().insert(new Q.Bullet(this.p.x + offsetX, this.p.y + 5, this.p.dir , this.p.x, this.p.y));
+        Q.stage().insert(new Q.Bullet(this.p.x + offsetX, this.p.y + 8, this.p.dir , this.p.x, this.p.y));
         if(Q.state.get("audio") == "on")
           Q.audio.play("fireAux.mp3"); // Reproducimos audio de blaster
       }
@@ -986,7 +990,7 @@ Q.component("debris3D", {
   added: function(){
     var self = this.entity;
     this.entity.animate({scale: this.entity.p.scale * 5}, 5, Q.Easing.Linear, {callback: function(){
-        self.animate({opacity: 0}, 4, Q.Easing.Linear, {callback: function(){
+        self.animate({scale: self.p.scale * 2, opacity: 0}, 4, Q.Easing.Linear, {callback: function(){
           self.destroy();
         }});
     }});
@@ -1053,23 +1057,18 @@ Q.component("hostile", {
         var posY = this.entity.p.y;
         //paramX, paramY, paramScale, explode
         this.entity.stage.insert(new Q.Explosion(posX, posY, 0.4, true));
-          if(this.entity.p.name == "meteorite"){ // Si es un meteorito
-            if(this.entity.p.scale != 0.2){
-              if(this.entity.p.scale == 1){
-                // paramX, paramY, paramName, paramSheet, paramScale, zIndex, paramMovType, paramType, paramPlanet
-                Q.stage().insert(new Q.Debris(posX, posY, this.entity.p.name, this.entity.p.sheet, 0.5, 4, this.entity.p.movType, "Hostile"));
-                Q.stage().insert(new Q.Debris(posX, posY, this.entity.p.name, this.entity.p.sheet, 0.5, 4, this.entity.p.movType, "Hostile"));
-              }else{
-                Q.stage().insert(new Q.Debris(posX, posY, this.entity.p.name, this.entity.p.sheet, 0.2, 4, this.entity.p.movType, "Hostile"));
-                Q.stage().insert(new Q.Debris(posX, posY, this.entity.p.name, this.entity.p.sheet, 0.2, 4, this.entity.p.movType, "Hostile"));
-              }
-            }
+        if(this.entity.p.name == "meteorite"){ // Si es un meteorito
+          if(this.entity.p.scale >= 0.5){
+            // paramX, paramY, paramName, paramSheet, paramScale, zIndex, paramMovType, paramType, paramPlanet
+            Q.stage().insert(new Q.Debris(posX, posY, this.entity.p.name, this.entity.p.sheet, this.entity.p.scale/2, 4, this.entity.p.movType, "Hostile"));
+            Q.stage().insert(new Q.Debris(posX, posY, this.entity.p.name, this.entity.p.sheet, this.entity.p.scale/2, 4, this.entity.p.movType, "Hostile"));
+          }  
         }else{ // Si no es un meteorito
           var rand = Math.round(Math.random());
           if(rand == 0){
-            Q.stage().insert(new Q.Debris(posX, posY, "OxygenCharge", "oxygen", 0.3, 4, this.entity.p.movType, "Reward"));
+            Q.stage().insert(new Q.Debris(posX, posY, "OxygenCharge", "oxygen", 1, 4, this.entity.p.movType, "Reward"));
           }else{
-            Q.stage().insert(new Q.Debris(posX, posY, "OxygenCharge", "oxygen", 0.3, 4, this.entity.p.movType, "Reward"));
+            Q.stage().insert(new Q.Debris(posX, posY, "OxygenCharge", "oxygen", 1, 4, this.entity.p.movType, "Reward"));
           }
         }
         this.entity.destroy();
@@ -1316,9 +1315,7 @@ Q.scene("level1",function(stage) {
 Q.scene("Intro",function(stage) {
      
   // A los 2 segundos, comienza el diálogo
-  setTimeout(function(){
       Q.Dialogue.play("1");
-  }, 2000);
   
   var s1, s2, s3;
 
@@ -1377,7 +1374,7 @@ Q.scene("Intro",function(stage) {
       debris: {
         1: {name: 'meteorite', scale: 1, sheet:"debris1", damage: 30, type: "Hostile"},
         2: {name: 'satellite', scale: 1, sheet:"debris2", damage: 50, type: "Hostile"},
-        3: {name: 'OxygenCharge', scale: 0.3, sheet:"oxygen", type: "Reward"}
+        3: {name: 'OxygenCharge', scale: 1, sheet:"oxygen", type: "Reward"}
       },
       numDebris: 10,
       orbits: { // Estos datos se rellenan al crear la partida. Dependen de planets
