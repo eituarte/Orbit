@@ -47,7 +47,7 @@ Q.Sprite.extend("Explosion", {
       opacity: 0.7
     });
     this.add('animation, tween');
-    this.on("finish", this, "end");
+    this.on("finished", this, "end");
     this.p.sensor = true;
     this.animate({scale: this.p.scale * 2}, 2);
 
@@ -148,10 +148,10 @@ Q.Sprite.extend("Planet", {
   step: function(dt){
     this.p.t++;
     if(this.p.nRewards > 0 && this.p.t%70 == 0){
-      var debrisNum = Math.floor(Math.random() * 3) + 1;
+      var debrisNum = Math.floor(Math.random() * 5) + 1;
       var debrisObj = Q.state.get('debris')[debrisNum];
       var scale = 0.5;
-      if(debrisObj.name == "OxygenCharge"){
+      if(debrisObj.name != "meteorite" && debrisObj.name != "satellite"){
         scale = 1;
       }
       // paramX, paramY, paramVx, paramVy, paramName, paramSheet, paramScale, zIndex, paramMovType, paramType, paramPlanet
@@ -362,7 +362,8 @@ Q.state.set({
       orbimeters: 150000,
       distanceToRadius: 0,
       minDistanceX: 0,
-      music: true,
+      audio: 'on',
+      modoDios: 'off',
       difficulties: ['LOW', 'MEDIUM', 'HIGH'],
       difficulty: 0
 });
@@ -1026,17 +1027,17 @@ Q.component("reward", {
         if(this.entity.p.movType == "2D" || this.entity.p.movType == "Orbit" || (this.entity.p.movType == "3D" && this.entity.p.scale >= 1.1 && this.entity.p.scale <= 1.3)){
           var p = Q.state.get("player");
           if(this.entity.p.name == "OxygenCharge"){
-            p.oxygen += 20; // Reponemos oxígeno
+            p.oxygen += 5; // Reponemos oxígeno
             if(p.oxygen > 100 ) 
               p.oxygen = 100; // Pero que no se pase de 100%
           }
           else if(this.entity.p.name == "Fuel"){
-            p.fuel += 20; // Reponemos combustible
+            p.fuel += 50; // Reponemos combustible
             if(p.fuel > 100) 
               p.fuel = 100; // Pero que no se pase de 100%
           }
           else if(this.entity.p.name == "Screw"){
-            p.shipHealth += 20; // Mejoramos el estado de la nave
+            p.shipHealth += 30; // Mejoramos el estado de la nave
             if(p.shipHealth > 100) 
               p.shipHealth = 100; // Pero que no se pase de 100%
           }
@@ -1056,19 +1057,19 @@ Q.component("hostile", {
         var posX = this.entity.p.x; 
         var posY = this.entity.p.y;
         //paramX, paramY, paramScale, explode
-        this.entity.stage.insert(new Q.Explosion(posX, posY, 0.4, true));
+        this.entity.stage.insert(new Q.Explosion(posX, posY, this.entity.p.scale/1.5, true));
         if(this.entity.p.name == "meteorite"){ // Si es un meteorito
           if(this.entity.p.scale >= 0.5){
             // paramX, paramY, paramName, paramSheet, paramScale, zIndex, paramMovType, paramType, paramPlanet
-            Q.stage().insert(new Q.Debris(posX, posY, this.entity.p.name, this.entity.p.sheet, this.entity.p.scale/2, 4, this.entity.p.movType, "Hostile"));
-            Q.stage().insert(new Q.Debris(posX, posY, this.entity.p.name, this.entity.p.sheet, this.entity.p.scale/2, 4, this.entity.p.movType, "Hostile"));
+            Q.stage().insert(new Q.Debris(posX, posY, this.entity.p.name, this.entity.p.sheet, this.entity.p.scale/2, 4, this.entity.p.movType, "Hostile", this.entity.p.planet));
+            Q.stage().insert(new Q.Debris(posX, posY, this.entity.p.name, this.entity.p.sheet, this.entity.p.scale/2, 4, this.entity.p.movType, "Hostile", this.entity.p.planet));
           }  
         }else{ // Si no es un meteorito
           var rand = Math.round(Math.random());
           if(rand == 0){
-            Q.stage().insert(new Q.Debris(posX, posY, "OxygenCharge", "oxygen", 1, 4, this.entity.p.movType, "Reward"));
+            Q.stage().insert(new Q.Debris(posX, posY, "OxygenCharge", "oxygen", 1, 4, this.entity.p.movType, "Reward", this.entity.p.planet));
           }else{
-            Q.stage().insert(new Q.Debris(posX, posY, "OxygenCharge", "oxygen", 1, 4, this.entity.p.movType, "Reward"));
+            Q.stage().insert(new Q.Debris(posX, posY, "Screw", "screw", 1, 4, this.entity.p.movType, "Reward", this.entity.p.planet));
           }
         }
         this.entity.destroy();
@@ -1169,7 +1170,7 @@ Q.Sprite.extend("DebrisSpawner", {
         var scale;
         var posX, posY;
         // Escogemos un Debris al azar
-        var debrisNum = Math.floor(Math.random() * 3) + 1;
+        var debrisNum = Math.floor(Math.random() * 5) + 1;
         var debrisObj = Q.state.get('debris')[debrisNum];
 
         if(this.p.dim == "2D"){
@@ -1279,19 +1280,21 @@ Q.scene("HUD", function(stage){
 
 });
 
-Q.load(["space_station1.png", "space_station2.png", "space_station3.png", "explosion.json","explosion.png", "Starship_Pilot.png", "Space_Captain.png", "Space_Commander.png", "fireAux.mp3","explosion.mp3", "interstellar.mp3", "spaceship.png", "spaceship.json", "1.png","2.png", "3.png","4.png","5.png","6.png","7.png",
+Q.load(["space_station1.png", "space_station2.png", "space_station3.png", "explosion.json","explosion.png", "Starship_Pilot.png", "Space_Captain.png", "Space_Commander.png", "fireAux.mp3","explosion.mp3", "interstellar.mp3", "godmode.mp3", "spaceship.png", "spaceship.json", "1.png","2.png", "3.png","4.png","5.png","6.png","7.png",
   "8.png","blackhole.png", "quarterStarfield.png",
   "quarterStarfield2.png", "vortex.png", "wormhole.png",
   "interiorCircularInfluence.png", "exteriorCircularInfluence.png",
   "Spaceship.png", "Spaceship.json",
-  "bgProst.png", "fondo.png", "debris1.png",
-  "debris2.png", "debris1.json", "debris2.json", "bullet.png", "rocket.png", "oxygen.png", "oxygen.json", "leftarrow.png", "rightarrow.png"], function(){
+  "bgProst.png", "fondo.png", "fondo2.png", "debris1.png",
+  "debris2.png", "debris1.json", "debris2.json", "bullet.png","screw.png", "screw.json", "fuel.png", "fuel.json", "oxygen.png", "oxygen.json", "leftarrow.png", "rightarrow.png"], function(){
         Q.compileSheets("Spaceship.png", "Spaceship.json");
         Q.compileSheets("spaceship.png", "spaceship.json");
         Q.compileSheets("explosion.png", "explosion.json");
         Q.compileSheets("debris1.png", "debris1.json");
         Q.compileSheets("debris2.png", "debris2.json");
         Q.compileSheets("oxygen.png", "oxygen.json");
+        Q.compileSheets("fuel.png", "fuel.json");
+        Q.compileSheets("screw.png", "screw.json");
     if(Q.state.get("audio") == "on")
       Q.audio.play('interstellar.mp3',{ loop: true });
     Q.stageScene("menu");
@@ -1372,9 +1375,11 @@ Q.scene("Intro",function(stage) {
         7: { x: 110200, y: 30, d: 700, r: 350, name: "Purply", g: 12, n: 0}
       },
       debris: {
-        1: {name: 'meteorite', scale: 1, sheet:"debris1", damage: 30, type: "Hostile"},
-        2: {name: 'satellite', scale: 1, sheet:"debris2", damage: 50, type: "Hostile"},
-        3: {name: 'OxygenCharge', scale: 1, sheet:"oxygen", type: "Reward"}
+        1: {name: 'meteorite', scale: 1, sheet: "debris1", damage: 30, type: "Hostile"},
+        2: {name: 'satellite', scale: 1, sheet: "debris2", damage: 50, type: "Hostile"},
+        3: {name: 'OxygenCharge', scale: 1, sheet: "oxygen", type: "Reward"},
+        4: {name: 'Fuel', scale: 1, sheet: "fuel", type: "Reward"},
+        5: {name: 'Screw', scale: 1, sheet: "screw", type: "Reward"}
       },
       numDebris: 10,
       orbits: { // Estos datos se rellenan al crear la partida. Dependen de planets
@@ -1399,7 +1404,7 @@ Q.scene("Intro",function(stage) {
       minDistanceX: 0,
       level: 1,
       modoDios: "on",
-      audio: "off",
+      audio: "on",
       difficulties: ['LOW', 'MEDIUM', 'HIGH'],
       difficulty: 0
     });
@@ -1443,18 +1448,22 @@ Q.scene('endGame',function(stage) {
 Q.scene('menu',function(stage) {
   var fondo = stage.insert(new Q.Fondo("fondo.png",screen.width,screen.height));
 
-  var musicTextLabel = stage.insert(new Q.UI.Text({x: screen.width/2 - 100,y: (screen.height/2), label: "Music ", family: "ethnocentric",color: "#FFFFFF"}));
-  var difTextLabel = stage.insert(new Q.UI.Text({x: screen.width/2 - 100 ,y: (screen.height/2) +80, label: "Difficulty ", family: "ethnocentric",color: "#FFFFFF"}));
+  var musicTextLabel = stage.insert(new Q.UI.Text({x: screen.width/2 - 100,y: (screen.height/2), label: "Music", family: "ethnocentric",color: "#FFFFFF"}));
+  var difTextLabel = stage.insert(new Q.UI.Text({x: screen.width/2 - 100 ,y: (screen.height/2) +80, label: "Difficulty", family: "ethnocentric",color: "#FFFFFF"}));
+  var godTextLabel = stage.insert(new Q.UI.Text({x: screen.width/2 - 100 ,y: (screen.height/2) +160, label: "God Mode", family: "ethnocentric",color: "#FFFFFF"}));
 
-  var musicLabel = stage.insert(new Q.UI.Text({x: screen.width/2 + 150,y: screen.height/2, label: "ON", family: "ethnocentric",color: "rgba(161, 209, 222, 0.47)"}));
-  var difLabel = stage.insert(new Q.UI.Text({x: screen.width/2 + 150 ,y: screen.height/2 +80, label: "LOW", family: "ethnocentric",color: "rgba(161, 209, 222, 0.47)"}));
+  var musicLabel = stage.insert(new Q.UI.Text({x: screen.width/2 + 150,y: screen.height/2, label: "ON", family: "ethnocentric",color: "#FFFFFF"}));
+  var difLabel = stage.insert(new Q.UI.Text({x: screen.width/2 + 150 ,y: screen.height/2 +80, label: "LOW", family: "ethnocentric",color: "#FFFFFF"}));
+  var godLabel = stage.insert(new Q.UI.Text({x: screen.width/2 + 150 ,y: screen.height/2 +160, label: "OFF", family: "ethnocentric",color: "#FFFFFF"}));
 
   var buttonLM = stage.insert(new Q.UI.Button({x: musicLabel.p.x - 80, y: musicLabel.p.y+15, w: 50, h: 50, asset:"leftarrow.png" }));
   var buttonRM = stage.insert(new Q.UI.Button({x: musicLabel.p.x + 80, y: musicLabel.p.y+15, w: 50, h: 50, asset:"rightarrow.png" }));
   var buttonLL = stage.insert(new Q.UI.Button({x: difLabel.p.x - 110, y: difLabel.p.y+15, w: 50, h: 50, asset:"leftarrow.png" }));
   var buttonRL = stage.insert(new Q.UI.Button({x: difLabel.p.x + 110, y: difLabel.p.y+15, w: 50, h: 50, asset:"rightarrow.png" }));
+  var buttonLG = stage.insert(new Q.UI.Button({x: godLabel.p.x - 110, y: godLabel.p.y+15, w: 50, h: 50, asset:"leftarrow.png" }));
+  var buttonRG = stage.insert(new Q.UI.Button({x: godLabel.p.x + 110, y: godLabel.p.y+15, w: 50, h: 50, asset:"rightarrow.png" }));
 
-  var enterText = stage.insert(new Q.UI.Button({x: screen.width/2+30, y: difLabel.p.y + 100, label: "Press ENTER to START", font: "ethnocentric", keyActionName: "confirm"}));
+  var enterText = stage.insert(new Q.UI.Button({x: screen.width/2+30, y: difLabel.p.y + 180, label: "Press ENTER to START", font: "ethnocentric", keyActionName: "confirm"}));
 
   enterText.on("click",function() {
     Q.stageScene('Intro', 0);
@@ -1464,7 +1473,7 @@ Q.scene('menu',function(stage) {
 
   buttonLM.on("click",function() {
     var m = Q.state.get('audio');
-    if(m){
+    if(m == 'on'){
       Q.state.set('audio', "off");
       musicLabel.p.label = "OFF";
     }else{
@@ -1475,7 +1484,7 @@ Q.scene('menu',function(stage) {
 
   buttonRM.on("click",function() {
     var m = Q.state.get('audio');
-    if(m){
+    if(m == 'on'){
       Q.state.set('audio', "off");
       musicLabel.p.label = "OFF";
     }else{
@@ -1506,6 +1515,40 @@ Q.scene('menu',function(stage) {
     Q.state.set('difficulty', num);
     var text =  Q.state.get('difficulties')[num];
     difLabel.p.label = text;
+  });
+
+  buttonLG.on("click",function() {
+    var m = Q.state.get('modoDios');
+    if(m == 'on'){
+      Q.state.set('modoDios', "off");
+      godLabel.p.label = "OFF";
+      fondo.p.asset = "fondo.png";
+      Q.audio.stop('godmode.mp3');
+    }else{
+      Q.state.set('modoDios', "on");
+      godLabel.p.label = "ON";
+      fondo.p.asset = "fondo2.png";
+      if(Q.state.get('audio') == 'on'){
+        Q.audio.play('godmode.mp3',{ loop: true });
+      }
+    }
+  });
+
+  buttonRG.on("click",function() {
+    var m = Q.state.get('modoDios');
+    if(m == 'on'){
+      Q.state.set('modoDios', "off");
+      godLabel.p.label = "OFF";
+      fondo.p.asset = "fondo.png";
+      Q.audio.stop('godmode.mp3');
+    }else{
+      Q.state.set('modoDios', "on");
+      godLabel.p.label = "ON";
+      fondo.p.asset = "fondo2.png";
+      if(Q.state.get('audio') == 'on'){
+        Q.audio.play('godmode.mp3',{ loop: true });
+      }
+    }
   });
 
 });
