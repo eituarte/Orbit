@@ -148,8 +148,10 @@ Q.Sprite.extend("Planet", {
   step: function(dt){
     this.p.t++;
     if(this.p.nRewards > 0 && this.p.t%70 == 0){
-      this.stage.insert(new Q.OxygenCharge(this.p.x, this.p.y, true, this));
-      this.p.nRewards --;
+      // paramX, paramY, paramVx, paramVy, paramName, paramSheet, paramScale, zIndex, paramMovType, paramType, paramPlanet
+      this.stage.insert(new Q.Debris(this.p.x, this.p.y, 0, 0, "OxygenCharge", "oxygen", 0.3, 4, "Orbit", "Reward", this));
+      //this.stage.insert(new Q.OxygenCharge(this.p.x, this.p.y, true, this));
+      this.p.nRewards--;
     }
   }
 });
@@ -349,7 +351,7 @@ Q.state.set({
       eventHorizon: undefined,
       player: {
         oxygen: 100,
-        spaceSuit: 100
+        shipHealth: 100
       },
       orbimeters: 150000,
       distanceToRadius: 0,
@@ -428,72 +430,6 @@ Q.Sprite.extend("Spaceship", {
     this.add('2d, animation, tween');
     this.play("right");
     
-    this.on('hit.sprite', function(collision) {
-      var p = Q.state.get("player");
-      if(collision.obj.isA('Rocket')) { // Si se choca con componentes para reparar la nave,
-        var life = p.spaceSuit + 20; // Mejoramos el estado de la nave
-        if(life > 100 ) life = 100; // Pero que no se pase de 100%
-        var player = { // Creamos una nueva variable player para Q.state
-          oxygen: p.oxygen,
-          spaceSuit: life
-        }
-        Q.state.set("player", player); // La añadimos. Esto dispara el evento on para que se actualice el HUD
-        collision.obj.destroy(); // Destruimos el componente
-      }else{
-        if(collision.obj.isA('Debris')) { // Si se choca con basura espacial
-            if(collision.obj.p.dim == "3D" ){ // Y estamos en modo 3D
-              // Colisión o bien buena o bien mala
-              if(collision.obj.p.scale <= 1.3 && collision.obj.p.scale >= 1.1){ // Y además en la misma profundidad
-                var life = p.spaceSuit - collision.obj.p.damage; // Empeoramos el estado de la nave
-                if(life < 0 ) life = 0;
-                var player = {
-                  oxygen: p.oxygen,
-                  spaceSuit: life
-                }
-                Q.state.set("player", player); // Actualizamos los datos del jugador en Q.state
-                collision.obj.destroy(); // Eliminamos la basura espacial
-
-                if(player.spaceSuit <= 0){ // Perdemos la partida si nos quedamos sin nave
-                  //Q.audio.play("explosion.mp3");
-                  this.destroy();
-                  // Llamar a EndGame
-                }
-                //console.log("Has colisionado con un objeto3D");
-              }
-            }
-            else if(collision.obj.p.dim == "2D"){ // Si estamos en modo 2D
-              //console.log('l '+ Q.state.get("player").spaceSuit);
-              var life = p.spaceSuit - collision.obj.p.damage; // Empeoramos el estado de la nave
-              if(life < 0 ) life = 0;
-              var player = {
-                oxygen: p.oxygen,
-                spaceSuit: life
-              }
-              Q.state.set("player", player); // Actualizamos el estado de la nave en Q.state
-              //console.log('d '+ collision.obj.p.damage);
-              //console.log('l '+ Q.state.get("player").spaceSuit);
-              collision.obj.destroy(); // Eliminamos la basura
-              if(player.spaceSuit <= 0){ // Perdemos la partida si nos quedamos sin nave
-                //Q.audio.play("explosion.mp3");
-                this.destroy();
-                // Llamar a EndGame
-              }
-            }
-        }else{
-          if(collision.obj.isA('OxygenCharge')) { // Si es una carga de oxígeno
-            var oxy = p.oxygen + 20;
-            if(oxy > 100 ) oxy = 100;
-            var player = {
-              oxygen: oxy,
-              spaceSuit: p.spaceSuit
-            }
-            Q.state.set("player", player); // Recuperamos oxígeno
-            this.p.oxygen += 20;
-            collision.obj.destroy();
-          }
-        }
-      }
-    });
     this.p.sensor = true;
     this.p.h = 16;
 
@@ -837,15 +773,6 @@ Q.Sprite.extend("Bullet", {
     this.add('animation, tween');
     this.p.sensor=true;
 
-    // Colisión con basura espacial
-    this.on('hit.sprite', function(collision) {
-      if(collision.obj.isA('Debris')) {
-        collision.obj.hitBullet();
-        this.destroy();
-        console.log("Bala ha chocado con debris");
-      }
-    });
-
     // Si estamos en modo 3D
     if(Q.state.get("dim") == "3D"){
        var evH = Q.state.get('eventHorizon'); // Cogemos los datos del Horizonte de sucesos de Q.state
@@ -870,131 +797,65 @@ Q.Sprite.extend("Bullet", {
     if(this.p.t >= 800){
       this.destroy();
     }
-    /*else{
-      var evH = Q.state.get('eventHorizon');
-      // Si se sale de la pantalla o si llega al medio
-      if(this.p.y < 0 || this.p.y>screen.height || (this.p.x == evH.p.x && this.p.y == evH.p.y)){
-        this.destroy();
-      }else{
-        if(this.p.dir == 'right'){
-          this.p.x += dt*this.p.vx;
-          if(evH.p.x >= this.p.orgX){
-            this.p.vy = this.p.vx;
-            if(evH.p.y >= this.p.orgY){
-              this.p.y += dt*this.p.vy;
-            }else{
-              this.p.y -= dt*this.p.vy;
-            }
-          }
-          this.p.x += dt*this.p.vx;
-        }else{
-          this.p.x -= dt*this.p.vx;
-          if(evH.p.x <= this.p.orgX){
-            this.p.vy = this.p.vx;
-            if(evH.p.y >= this.p.orgY){
-              this.p.y += dt*this.p.vy;
-            }else{
-              this.p.y -= dt*this.p.vy;
-            }
-          }
-        }
-      }
-    }*/
   }
 });
 
-Q.Sprite.extend("Rocket",{
-  init: function(paramX, paramY){
-    this._super({
-      asset: 'rocket.png',
-      x: paramX,
-      y: paramY,
-      vx: 0,
-      vy: 0,
-      name: 'rocket',
-      scale: 0.2,
-      gravity: 0
-    });
-    this.add('2d, animation, tween');
-    this.animate({angle: -3000}, 80);
-    this.p.sensor=true;
-  },
-  step: function(dt){
-  }
-});
 
-// Sprite carga de oxígeno (para restaurar el oxígeno de la nave)
-Q.Sprite.extend("OxygenCharge",{
-  init: function(paramX, paramY, paramOrbit, paramPlanet){
-    this._super({
-      asset: 'oxygen.png',
-      x: paramX,
-      y: paramY,
-      vx: 0,
-      vy: 0,
-      name: 'oxygenCharge',
-      scale: 0.2,
-      gravity: 0,
-      orbit: paramOrbit,
-      planet: paramPlanet
-    });
-    this.add('2d, animation, tween');
-    this.animate({angle: -3000}, 80);
-    this.p.sensor=true;
-    if(this.p.orbit){
-      // Calcular arrays de posiciones de la órbita
-      this.p.u = new Array(); // Rellenaremos con las posiciones "verticales"
-      var alpha = Math.PI/2; // Iniciamos el desplazamiento a 90 grados
-      var incAlpha = Math.PI/200; // Calculamos el ángulo de rotación
-      var yIni = this.p.planet.p.y - this.p.planet.p.d;
+Q.component("orbit", {
+  added: function(){
+    // Calcular arrays de posiciones de la órbita
+    this.entity.p.u = new Array(); // Rellenaremos con las posiciones "verticales"
+    var alpha = Math.PI/2; // Iniciamos el desplazamiento a 90 grados
+    var incAlpha = Math.PI/200; // Calculamos el ángulo de rotación
+    var yIni = this.entity.p.planet.p.y - this.entity.p.planet.p.d;
+    alpha -= incAlpha;
+    var k = 0;
+    while(k < 200){
+      // Vamos añadiendo la coordenada y correspondiente.
+      // La calculamos con trigonometría para que los puntos de la circunferencia equidisten
+      this.entity.p.u.push(yIni + (this.entity.p.planet.p.d - Math.sin(alpha)*this.entity.p.planet.p.d));
       alpha -= incAlpha;
-      var k = 0;
-      while(k < 200){
-        // Vamos añadiendo la coordenada y correspondiente.
-        // La calculamos con trigonometría para que los puntos de la circunferencia equidisten
-        this.p.u.push(yIni + (this.p.planet.p.d - Math.sin(alpha)*this.p.planet.p.d));
-        alpha -= incAlpha;
-        if(alpha <= 0){
-          alpha = 2*Math.PI - incAlpha; // Reseteamos a 360-incAlpha en el caso de que llegue a 0
-        }
-        k++;
+      if(alpha <= 0){
+        alpha = 2*Math.PI - incAlpha; // Reseteamos a 360-incAlpha en el caso de que llegue a 0
       }
-      // Ahora tenemos u[] lleno de las primeras coordenadas
-      // Necesitamos rellenar v[], que tendrá el doble de tamaño, con las coordenadas "x" de la circunferencia
-      // Ecuación de la circunferencia: (v - x)^2 + (u - y)^2 = r^2
-      this.p.v = new Array();
-      for (var i = this.p.u.length - 1; i >= 0; i--) {
-        // Despejar (v - x)
-        var vMx = Math.sqrt(this.p.planet.p.d*this.p.planet.p.d - (this.p.u[i] - this.p.planet.p.y)*(this.p.u[i] - this.p.planet.p.y));
-        // Calcular el valor de la derecha 
-        var v1 = vMx + this.p.planet.p.x;
-        // Ahora añadimos la coordenada al array
-        this.p.v.push(v1);
-      };
-      
-      for (var i = 0; i < this.p.u.length; i++) {
-        // Despejar (v - x)
-        var vMx = -Math.sqrt(this.p.planet.p.d*this.p.planet.p.d - (this.p.u[i] - this.p.planet.p.y)*(this.p.u[i] - this.p.planet.p.y));
-        // Calcular el valor de la izquierda
-        var v2 = this.p.planet.p.x + vMx;
-        // Ahora añadimos la coordenada al array
-        this.p.v.push(v2);
-      };
-      // Ahora tenemos dos arrays.
-      // Para que recorra la órbita, tenemos que recorrer de abajo a arriba, y de arriba a abajo el array u[]
-      // En cada pasada, acceder a la mitad de las coordenadas de v[] y repetir
-
-      // Declaramos unas coordenadas locales para el objeto
-      this.p.x = this.p.v[0];
-      this.p.y = this.p.u[0];
-      this.p.i = 0; // Índice de u[]. Será ascendente y descendente, alternando direcciones cuando llegue a los límites
-      this.p.j = 0; // Índice de v[]. Irá de 0 a 80, volviendo a 0 cada vez que se complete una vuelta a la órbita
-      
-      this.p.dirY = 1; // Dirección y del objeto
+      k++;
     }
+    // Ahora tenemos u[] lleno de las primeras coordenadas
+    // Necesitamos rellenar v[], que tendrá el doble de tamaño, con las coordenadas "x" de la circunferencia
+    // Ecuación de la circunferencia: (v - x)^2 + (u - y)^2 = r^2
+    this.entity.p.v = new Array();
+    for (var i = this.entity.p.u.length - 1; i >= 0; i--) {
+      // Despejar (v - x)
+      var vMx = Math.sqrt(this.entity.p.planet.p.d*this.entity.p.planet.p.d - (this.entity.p.u[i] - this.entity.p.planet.p.y)*(this.entity.p.u[i] - this.entity.p.planet.p.y));
+      // Calcular el valor de la derecha 
+      var v1 = vMx + this.entity.p.planet.p.x;
+      // Ahora añadimos la coordenada al array
+      this.entity.p.v.push(v1);
+    };
+    
+    for (var i = 0; i < this.entity.p.u.length; i++) {
+      // Despejar (v - x)
+      var vMx = -Math.sqrt(this.entity.p.planet.p.d*this.entity.p.planet.p.d - (this.entity.p.u[i] - this.entity.p.planet.p.y)*(this.entity.p.u[i] - this.entity.p.planet.p.y));
+      // Calcular el valor de la izquierda
+      var v2 = this.entity.p.planet.p.x + vMx;
+      // Ahora añadimos la coordenada al array
+      this.entity.p.v.push(v2);
+    };
+    // Ahora tenemos dos arrays.
+    // Para que recorra la órbita, tenemos que recorrer de abajo a arriba, y de arriba a abajo el array u[]
+    // En cada pasada, acceder a la mitad de las coordenadas de v[] y repetir
+
+    // Declaramos unas coordenadas locales para el objeto
+    this.entity.p.x = this.entity.p.v[0];
+    this.entity.p.y = this.entity.p.u[0];
+    this.entity.p.i = 0; // Índice de u[]. Será ascendente y descendente, alternando direcciones cuando llegue a los límites
+    this.entity.p.j = 0; // Índice de v[]. Irá de 0 a 80, volviendo a 0 cada vez que se complete una vuelta a la órbita
+    
+    this.entity.p.dirY = 1; // Dirección y del objeto
+    
   },
-  step: function(dt){
-    if(this.p.orbit){
+  extend: {
+    stepDebris: function(dt){
       // Recorrer arrays de posiciones de la órbita
       this.p.y = this.p.u[this.p.i];
       this.p.i += this.p.dirY;
@@ -1015,10 +876,175 @@ Q.Sprite.extend("OxygenCharge",{
     }
   }
 });
+Q.component("debris2D", {
+  added: function(){
+
+  },
+  extend: {
+    stepDebris: function(dt){
+      this.p.x += dt* this.p.vx;
+      this.p.y += dt* this.p.vy;
+
+      this.play("far_away");
+      if(this.p.y < 0 || this.p.y>screen.height){ // Si se sale de la pantalla, lo eliminamos
+        this.destroy();
+      }
+    }
+  }
+});
+Q.component("debris3D", {
+  added: function(){
+    var self = this.entity;
+    this.entity.animate({scale: this.entity.p.scale * 5}, 5, Q.Easing.Linear, {callback: function(){
+        self.animate({scale: 3, opacity: 0}, 4, Q.Easing.Linear, {callback: function(){
+          self.destroy();
+        }});
+    }});
+  },
+  extend: {
+    stepDebris: function(dt){
+      this.p.x += dt* this.p.vx;
+      this.p.y += dt* this.p.vy;
+
+      if(this.p.scale >= 1.3){ // En cuanto pase por el plano Z del jugador, hacemos que esté detrás (para que se pinte bien)
+        this.p.z = 15;
+        this.play("far_away");
+      }
+      if(this.p.scale >= 1.1 && this.p.scale <= 1.3){
+        this.play("close_by");
+      }
+      if(this.p.y < 0 || this.p.y>screen.height){ // Si se sale de la pantalla, lo eliminamos
+        this.destroy();
+      }
+    }
+  }
+});
+
+Q.component("reward", {
+  added: function(){
+    this.entity.on("hit.sprite", this, function(collision){
+      if(collision.obj.isA("Spaceship")){
+        // Distinguir entre tipos de Recompensa (oxígeno, combustible, reparar nave...)
+        // Comparar que esté en 2D o en 3D (Comprobar escala)
+        if(this.entity.p.movType == "2D" || this.entity.p.movType == "Orbit" || (this.entity.p.movType == "3D" && this.entity.p.scale >= 1.1 && this.entity.p.scale <= 1.3)){
+          this.entity.destroy();
+          var p = Q.state.get("player");
+          if(this.entity.p.name == "OxygenCharge"){
+            p.oxygen += 20; // Reponemos oxígeno
+            if(p.oxygen > 100 ) 
+              p.oxygen = 100; // Pero que no se pase de 100%
+          }
+          else if(this.entity.p.name == "Fuel"){
+            p.fuel += 20; // Reponemos combustible
+            if(p.fuel > 100) 
+              p.fuel = 100; // Pero que no se pase de 100%
+          }
+          else if(this.entity.p.name == "Screw"){
+            p.shipHealth += 20; // Mejoramos el estado de la nave
+            if(p.shipHealth > 100) 
+              p.shipHealth = 100; // Pero que no se pase de 100%
+          }
+          Q.state.set("player", p); // Actualizamos el estado de la nave
+        }
+      }
+    });
+  }
+});
+
+Q.component("hostile", {
+  added: function(){
+    this.entity.on("hit.sprite", this, function(collision){
+      if(collision.obj.isA("Bullet")){
+        collision.obj.destroy();
+        var posX = this.entity.p.x; 
+        var posY = this.entity.p.y;
+          if(this.entity.p.name == "meteorite"){ // Si es un meteorito
+            if(this.entity.p.scale != 0.2){
+              //VELOCIDADES 1
+              var dirX1 = Math.round(Math.random());
+              if(dirX1 == 0){
+                dirX1 = -1;
+              }else{
+                dirX1 = 1;
+              }
+              var velX1 = Math.round(Math.random()* 40)*dirX1; // velocidad en el eje x siempre negativa para que vaya a la izda.
+              var dirY1 = 1;
+              if(posY > (screen.height/2)){ //si la posY es mayor que la mitad de la pantalla va hacia arriba en caso contario hacia abajo
+                dirY1 = -1;
+              }
+              var velY1 = Math.round(Math.random()* 40)* dirY1;
+
+              //VELOCIDADES 2
+              var dirX2 = Math.round(Math.random());
+              if(dirX2 == 0){
+                dirX2 = -1;
+              }else{
+                dirX2 = 1;
+              }
+              var velX2 = Math.round(Math.random()* 40)*dirX2; // velocidad en el eje x siempre negativa para que vaya a la izda.
+              var dirY2 = 1;
+              if(posY > (screen.height/2)){ //si la posY es mayor que la mitad de la pantalla va hacia arriba en caso contario hacia abajo
+                dirY2 = -1;
+              }
+              var velY2 = Math.round(Math.random()* 40)* dirY2;
+              if(this.entity.p.scale == 1){
+                // paramX, paramY, paramVx, paramVy, paramName, paramSheet, paramScale, zIndex, paramMovType, paramType, paramPlanet
+                Q.stage().insert(new Q.Debris(posX, posY, velX1, velY1, this.entity.p.name, this.entity.p.sheet, 0.5, 4, this.entity.p.movType, "Hostile"));
+                Q.stage().insert(new Q.Debris(posX, posY, velX2, velY2, this.entity.p.name, this.entity.p.sheet, 0.5, 4, this.entity.p.movType, "Hostile"));
+              }else{
+                Q.stage().insert(new Q.Debris(posX, posY, velX1, velY1, this.entity.p.name, this.entity.p.sheet, 0.2, 4, this.entity.p.movType, "Hostile"));
+                Q.stage().insert(new Q.Debris(posX, posY, velX2, velY2, this.entity.p.name, this.entity.p.sheet, 0.2, 4, this.entity.p.movType, "Hostile"));
+              }
+            }
+        }else{ // Si no es un meteorito
+          var dirX = Math.round(Math.random());
+          if(dirX == 0){
+            dirX = -1;
+          }else{
+            dirX = 1;
+          }
+          var velX = Math.round(Math.random()* 40)*dirX1; // velocidad en el eje x siempre negativa para que vaya a la izda.
+          var dirY = 1;
+          if(posY > (screen.height/2)){ //si la posY es mayor que la mitad de la pantalla va hacia arriba en caso contario hacia abajo
+            dirY = -1;
+          }
+          var velY = Math.round(Math.random()* 40)* dirY;
+          var rand = Math.round(Math.random());
+          if(rand == 0){
+            Q.stage().insert(new Q.Debris(posX, posY, velX1, velY1, "OxygenCharge", "oxygen", 0.3, 4, this.entity.p.movType, "Reward"));
+          }else{
+            Q.stage().insert(new Q.Debris(posX, posY, velX1, velY1, "OxygenCharge", "oxygen", 0.3, 4, this.entity.p.movType, "Reward"));
+          }
+        }
+        this.entity.destroy();
+      }
+      else if (collision.obj.isA("Spaceship")){
+        // Comparar que esté en 2D o en 3D (Comprobar escala)
+        if(this.entity.p.movType == "2D" || (this.entity.p.movType == "3D" && this.entity.p.scale >= 1.1 && this.entity.p.scale <= 1.3)){
+          
+          var p = Q.state.get("player");
+          if(this.entity.p.name == "meteorite"){
+            p.shipHealth -= 20 * this.entity.p.scale; // Reponemos oxígeno
+          }
+          else if(this.entity.p.name == "satellite"){
+            p.shipHealth -= 50; // Reponemos combustible
+          }
+          if(p.shipHealth < 0 ){
+            p.shipHealth = 0; // Pero que no se pase de 100%
+            collision.obj.destroy();
+            // Llamar a EndGame
+          }
+          Q.state.set("player", p); // Actualizamos el estado de la nave
+          this.entity.destroy();
+        }      
+      }
+    });
+  }
+});
 
 // Clase que representa el objeto Debris (corresponde a la basura espacial)
 Q.Sprite.extend("Debris", {
-  init:function(paramX, paramY, paramVx, paramVy, paramName, paramSheet, paramScale, paramDamage, zIndex, paramDim){
+  init:function(paramX, paramY, paramVx, paramVy, paramName, paramSheet, paramScale, zIndex, paramMovType, paramType, paramPlanet){
     this._super({
       sheet: paramSheet,
       sprite: "debris_anim",
@@ -1028,139 +1054,41 @@ Q.Sprite.extend("Debris", {
       vy: paramVy,
       scale: paramScale,
       name: paramName,
-      damage: paramDamage,
+      // Falta paramdamage!
       opacity: 0,
       gravity: 0,
       t: 0, // Factor "tiempo"
       z: zIndex,
-      dim: paramDim
+      movType: paramMovType,
+      type: paramType
     });
-    this.add('2d,animation, tween');
-    //this.on('bullet.hit', this, 'hitBullet');
     this.p.sensor=true;
-    if(this.p.dim == "3D"){ //  Si estamos en modo 3D, agregamos un efecto 3D
-      this.animate({scale: this.p.scale * 5}, 5, Q.Easing.Linear, {callback: function(){
-        this.animate({scale: 3, opacity: 0}, 4, Q.Easing.Linear, {callback: function(){
-          this.destroy();
-        }});
-      }});
+    var components = '2d, animation, tween';
+    if(this.p.movType == "2D"){
+      components += ', debris2D';
     }
-    this.play("far_away");
+    else if(this.p.movType == "3D"){
+      components += ', debris3D';
+    }
+    else if(this.p.movType == "Orbit"){
+      this.p.planet = paramPlanet;
+      components += ', orbit';
+    }
+
+    if(this.p.type == "Hostile"){
+      components += ', hostile';
+    }
+    else if(this.p.type == "Reward"){
+      components += ', reward';
+    }
+    this.add(components);
+    // Común
+    this.play("far_away"); // Por defecto
     this.animate({opacity: 1}, 2); // Hacemos que aparezca con fundido de entrada 
     this.animate({angle: -3000}, 80); // Hacemos que rote para más realismo
   },
   step: function(dt){
-    this.p.x += dt* this.p.vx;
-    this.p.y += dt* this.p.vy;
-    if(this.p.scale >= 1.3){ // En cuanto pase por el plano Z del jugador, hacemos que esté detrás (para que se pinte bien)
-      this.p.z = 15;
-      this.play("far_away");
-    }
-    if(this.p.scale >= 1.1 && this.p.scale <= 1.3){
-      this.play("close_by");
-    }
-    if(this.p.y < 0 || this.p.y>screen.height){ // Si se sale de la pantalla, lo eliminamos
-      this.destroy();
-    }
-  },
-  hitBullet: function(){
-    var posX = this.p.x; 
-    var posY = this.p.y;
-    console.log("DIM debris: " + this.p.dim);
-    if(this.p.dim == "2D"){
-      if(this.p.name == "meteorite"){ // Si es un meteorito
-        if(this.p.scale != 0.2){
-          //VELOCIDADES 1
-          var dirX1 = Math.round(Math.random());
-          if(dirX1 == 0){
-            dirX1 = -1;
-          }else{
-            dirX1 = 1;
-          }
-          var velX1 = Math.round(Math.random()* 40)*dirX1; // velocidad en el eje x siempre negativa para que vaya a la izda.
-          var dirY1 = 1;
-          if(posY > (screen.height/2)){ //si la posY es mayor que la mitad de la pantalla va hacia arriba en caso contario hacia abajo
-            dirY1 = -1;
-          }
-          var velY1 = Math.round(Math.random()* 40)* dirY1;
-
-          //VELOCIDADES 2
-          var dirX2 = Math.round(Math.random());
-          if(dirX2 == 0){
-            dirX2 = -1;
-          }else{
-            dirX2 = 1;
-          }
-          var velX2 = Math.round(Math.random()* 40)*dirX2; // velocidad en el eje x siempre negativa para que vaya a la izda.
-          var dirY2 = 1;
-          if(posY > (screen.height/2)){ //si la posY es mayor que la mitad de la pantalla va hacia arriba en caso contario hacia abajo
-            dirY2 = -1;
-          }
-          var velY2 = Math.round(Math.random()* 40)* dirY2;
-          if(this.p.scale == 1){
-
-            Q.stage().insert(new Q.Debris(posX, posY, velX1, velY1, this.p.name, this.p.sheet, 0.5, 10, 4, this.p.dim));
-            Q.stage().insert(new Q.Debris(posX, posY, velX2, velY2, this.p.name, this.p.sheet, 0.5, 10, 4, this.p.dim));
-          }else{
-            Q.stage().insert(new Q.Debris(posX, posY, velX1, velY1, this.p.name, this.p.sheet, 0.2, 5, 4, this.p.dim));
-            Q.stage().insert(new Q.Debris(posX, posY, velX2, velY2, this.p.name, this.p.sheet, 0.2, 5, 4, this.p.dim));
-          }
-        }
-        var velX1 = Math.round(Math.random()* 40)*dirX1; // velocidad en el eje x siempre negativa para que vaya a la izda.
-        var dirY1 = 1;
-        if(posY > (screen.height/2)){ //si la posY es mayor que la mitad de la pantalla va hacia arriba en caso contario hacia abajo
-          dirY1 = -1;
-        }
-        var velY1 = Math.round(Math.random()* 40)* dirY1;
-
-        //VELOCIDADES 2
-        var dirX2 = Math.round(Math.random());
-        if(dirX2 == 0){
-          dirX2 = -1;
-        }else{
-          dirX2 = 1;
-        }
-        var velX2 = Math.round(Math.random()* 40)*dirX2; // velocidad en el eje x siempre negativa para que vaya a la izda.
-        var dirY2 = 1;
-        if(posY > (screen.height/2)){ //si la posY es mayor que la mitad de la pantalla va hacia arriba en caso contario hacia abajo
-          dirY2 = -1;
-        }
-        var velY2 = Math.round(Math.random()* 40)* dirY2;
-        if(this.p.scale == 1){
-
-          Q.stage().insert(new Q.Debris(posX, posY, velX1, velY1, this.p.name, this.p.asset, 0.5, 10, 4, this.p.dim));
-          Q.stage().insert(new Q.Debris(posX, posY, velX2, velY2, this.p.name, this.p.asset, 0.5, 10, 4, this.p.dim));
-        }else{
-          Q.stage().insert(new Q.Debris(posX, posY, velX1, velY1, this.p.name, this.p.asset, 0.2, 5, 4, this.p.dim));
-          Q.stage().insert(new Q.Debris(posX, posY, velX2, velY2, this.p.name, this.p.asset, 0.2, 5, 4, this.p.dim));
-        }
-      
-    }else{ // Si no es un meteorito
-      var dirX = Math.round(Math.random());
-      if(dirX == 0){
-        dirX = -1;
-      }else{
-        dirX = 1;
-      }
-      var velX = Math.round(Math.random()* 40)*dirX1; // velocidad en el eje x siempre negativa para que vaya a la izda.
-      var dirY = 1;
-      if(posY > (screen.height/2)){ //si la posY es mayor que la mitad de la pantalla va hacia arriba en caso contario hacia abajo
-        dirY = -1;
-      }
-      var velY = Math.round(Math.random()* 40)* dirY;
-      var rand = Math.round(Math.random());
-      if(rand == 0){
-        Q.stage().insert(new Q.Rocket(posX, posY, velX, velY));
-      }else{
-        Q.stage().insert(new Q.OxygenCharge(posX, posY, velX, velY));
-      }
-    }
-    this.destroy();
-  }
-  else{
-      console.log("colision bullet - debris en 3D");
-      this.destroy();
-    }
+    this.stepDebris(dt); // this.p.type determina el comportamiento de movimiento de Debris
   }
 });
 
@@ -1222,8 +1150,8 @@ Q.Sprite.extend("DebrisSpawner", {
         var debrisNum = Math.round(Math.random()* (2 - 1) + 1);
         var debrisObj = Q.state.get('debris')[debrisNum];
         this.p.cont++;
-
-        Q.stage().insert(new Q.Debris(posX, posY, velX, velY,debrisObj.name , debrisObj.asset, scale, debrisObj.damage, 4, this.p.dim));
+        // paramX, paramY, paramName, paramSheet, paramScale, zIndex, paramMovType, paramType
+        Q.stage().insert(new Q.Debris(posX, posY, 0, 0, debrisObj.name , debrisObj.sheet, scale, 4, this.p.dim, "Hostile"));
       }
     }
   }
@@ -1294,7 +1222,7 @@ Q.scene("HUD", function(stage){
   var textOxygen = new Q.UI.Text({family: "ethnocentric", x: 30, y: 40, label: "Oxygen: " + oxygen + "%", color: "#FFDA6C", outlineWidth: 3, size: 14, align: "left"});
   stage.insert(textOxygen);
 
-  var ship = player["spaceSuit"];
+  var ship = player["shipHealth"];
   var textShip = new Q.UI.Text({family: "ethnocentric", x: 30, y: 60, label: "Ship: " + ship + "%", color: "#FFDA6C", outlineWidth: 3, size: 14, align: "left"});
   stage.insert(textShip);
 
@@ -1303,7 +1231,7 @@ Q.scene("HUD", function(stage){
     var orbimeters = Q.state.get("orbimeters");
     textOrbimeters.p.label = "Orbimeters to Station: " + orbimeters;
     textOxygen.p.label = "Oxygen: " + p.oxygen + "%";
-    textShip.p.label = "Ship: " + p.spaceSuit + "%";
+    textShip.p.label = "Ship: " + p.shipHealth + "%";
   });
 
 });
@@ -1314,12 +1242,13 @@ Q.load(["space_station1.png", "space_station2.png", "space_station3.png", "explo
   "interiorCircularInfluence.png", "exteriorCircularInfluence.png",
   "Spaceship.png", "Spaceship.json",
   "bgProst.png", "fondo.png", "debris1.png",
-  "debris2.png", "debris1.json", "debris2.json", "bullet.png", "rocket.png", "oxygen.png", "leftarrow.png", "rightarrow.png"], function(){
+  "debris2.png", "debris1.json", "debris2.json", "bullet.png", "rocket.png", "oxygen.png", "oxygen.json", "leftarrow.png", "rightarrow.png"], function(){
         Q.compileSheets("Spaceship.png", "Spaceship.json");
         Q.compileSheets("spaceship.png", "spaceship.json");
         Q.compileSheets("explosion.png", "explosion.json");
         Q.compileSheets("debris1.png", "debris1.json");
         Q.compileSheets("debris2.png", "debris2.json");
+        Q.compileSheets("oxygen.png", "oxygen.json");
     if(Q.state.get("audio") == "on")
       Q.audio.play('interstellar.mp3',{ loop: true });
     Q.stageScene("menu");
@@ -1372,58 +1301,6 @@ Q.scene("Intro",function(stage) {
       s2.animate({opacity: 0}, 2);
       s3.animate({opacity: 0}, 2);
   }, 50000);
-  /*
-  setTimeout(function(){
-      Q.clearStages();
-
-    Q.state.reset({
-      dim: "2D",
-      nPlanet: 0, // Índice del planeta detectado por el radar
-      planets: { // Coordenadas, distancia de órbita, radio del planeta
-        0: {},
-        1: { x: 1540, y: 330, d: 400, r: 130, name: "Fiery", g: 9.8},
-        2: { x: 4240, y: 330, d: 450, r: 160, name: "Reddy", g: 6},
-        wormhole : { x: 6240, y: 330, d: 850, r: 10, name: "Gargantua", g: 0},
-        3: { x: 8840, y: 330, d: 500, r: 210, name: "Greeny", g: 4},
-        4: { x: 12340, y: 330, d: 250, r: 250, name: "Veggie", g: 8},
-        5: { x: 20040, y: 530, d: 600, r: 300, name: "Bluey", g: 2},
-        6: { x: 25200, y: 230, d: 400, r: 125, name: "Stormzy", g: 10},
-        7: { x: 37200, y: 30, d: 700, r: 350, name: "Purply", g: 12}
-      },
-      debris: {
-        1: {name: 'meteorite', asset:"debris1.png", damage: 30},
-        2: {name: 'satellite', asset:"debris2.png", damage: 50}
-      },
-      numDebris: 4,
-      orbits: { // Estos datos se rellenan al crear la partida
-        1: {x1: 0, x2: 0},
-        2: {x1: 0, x2: 0},
-        3: {x1: 0, x2: 0},
-        4: {x1: 0, x2: 0},
-        5: {x1: 0, x2: 0},
-        6: {x1: 0, x2: 0},
-        7: {x1: 0, x2: 0},
-        wormhole: {x1: 0, x2: 0}
-      },
-      eventHorizon: undefined,
-      player: {
-        oxygen: 100,
-        spaceSuit: 100
-      },
-      orbimeters: 150000,
-      distanceToRadius: 0,
-      minDistanceX: 0,
-      music: true,
-      difficulties: ['LOW', 'MEDIUM', 'HIGH'],
-      difficulty: 0
-    });
-  
-    Q.stageScene('level1', 0);
-    //Q.stageScene('playerScene', 3);
-    //Q.audio.play("interstellar.mp3", {loop: true});
-    Q.stageScene('HUD', 2);
-    Q.stageScene('RADAR', 3);
-  }, 52000);*/
 
   var button = stage.insert(new Q.UI.Button({x: screen.width/2, y: screen.height/2,fill: "#CCCCCC", w: screen.width, h: screen.height, asset: "bgProst.png"}));
   
@@ -1454,8 +1331,8 @@ Q.scene("Intro",function(stage) {
         7: { x: 110200, y: 30, d: 700, r: 350, name: "Purply", g: 12, n: 0}
       },
       debris: {
-        1: {name: 'meteorite', asset:"debris1", damage: 30},
-        2: {name: 'satellite', asset:"debris2", damage: 50}
+        1: {name: 'meteorite', sheet:"debris1", damage: 30},
+        2: {name: 'satellite', sheet:"debris2", damage: 50}
       },
       numDebris: 4,
       orbits: { // Estos datos se rellenan al crear la partida. Dependen de planets
@@ -1471,7 +1348,8 @@ Q.scene("Intro",function(stage) {
       eventHorizon: undefined,
       player: {
         oxygen: 100,
-        spaceSuit: 100
+        shipHealth: 100,
+        fuel: 100
       },
       orbimeters: 130000,
       distanceToRadius: 0,
@@ -1492,13 +1370,7 @@ Q.scene("Intro",function(stage) {
 
   });
 });
-/*
-Q.loadTMX("levelProst.tmx", function() {
-    //Q.stageScene("level1");
-    Q.stageScene("menu");
-    //Q.debug = true;
-});
-*/
+
 Q.scene('endGame',function(stage) {
   var container = stage.insert(new Q.UI.Container({
     x: Q.width/2, y: Q.height/2, fill: "rgba(0,0,0,0.5)"
