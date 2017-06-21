@@ -692,6 +692,7 @@ Q.Sprite.extend("Spaceship", {
         this.p.x *= 2; // Atravesamos el espacio-tiempo
         Q.state.inc("level");
         Q.Dialogue.play("2");
+        this.stage.insert(new Q.DebrisSpawner(this, "Asteroids", this.p.x, this.p.y));
         this.animate({scale: 0.5}, 2, Q.Easing.Quadratic.Out);
         Q.state.set("minDistanceX", this.p.x - 200);
       }
@@ -1083,7 +1084,7 @@ Q.component("hostile", {
             collision.obj.wreckShip(Math.floor(20 * this.entity.p.scale));
           }
           else if(this.entity.p.name == "satellite"){
-            collision.obj.wreckShip(40); 
+            collision.obj.wreckShip(10); 
           }
           this.entity.destroy();
         }      
@@ -1140,7 +1141,160 @@ Q.Sprite.extend("Debris", {
   }
 });
 
+Q.component("asteroidField",{
+  added: function(){
+    this.entity.p.cont = 30; // Hasta 30 asteroides
+    this.entity.p.level = Q.state.get("level"); // Puede ser 2 ó 3 (2 -> Campo de asteroides, 3 -> Lluvia de meteoritos)
+  },
+  extend:{
+    spawn: function(dt){
+      if(this.p.cont > 0){
+        console.log("Cont: " + this.p.cont);
+        var x = Math.floor(Math.random() * 8000); // Un número aleatorio entre 0 y 7999
+        x += Q.state.get("planets")["wormhole2"].x*2 + 1000; // Lo desplazamos a la posición correcta
+        var debris;
+        console.log("x: " + x);
+        var y;
+        if(this.p.level == 2){ // Si es un campo de asteroides
+          // Crear meteoritos a partir de la posición y del player, y en un rango de posiciones x
+          y = this.p.play.p.y + (Math.random() * 2 - 1)*screen.height/2;
+          debris = new Q.Debris(x, y, "meteorite" , "debris1", 1, 4, "2D", "hostile");
+          this.stage.insert(debris);
+          this.p.cont--;
+        }
+        else if (this.p.level == 3 && this.p.t%100 == 0){ // Si es una lluvia de asteroides
+          y = 0; // Vienen por arriba de la pantalla
+          debris = new Q.Debris(x, y, "meteorite" , "debris1", 1, 4, "2D", "hostile");
+          debris.p.vy = 30*Q.state.get("difficulty"); // Hacemos que caiga hacia abajo
+          this.stage.insert(debris);
+          this.p.cont--;
+        } 
+      }
+    }
+  }
+});
+
+Q.component("spawnerOrbit", {
+  added: function(){
+    this.entity.p.cont = this.entity.p.infoPlanet.nRewards;
+  },
+  extend:{
+    spawn: function(dt){
+      if(this.p.t%70 == 0){
+        var debrisNum = Math.floor(Math.random() * 5) + 1;
+        var debrisObj = Q.state.get('debris')[debrisNum];
+        var scale = 0.5;
+        if(debrisObj.name != "meteorite" && debrisObj.name != "satellite"){
+          scale = 1;
+        }
+        // paramX, paramY, paramVx, paramVy, paramName, paramSheet, paramScale, zIndex, paramMovType, paramType, paramPlanet
+        this.stage.insert(new Q.Debris(this.p.x, this.p.y, debrisObj.name, debrisObj.sheet, scale, 4, "Orbit", debrisObj.type, this.entity.p.infoPlanet.planet));
+        //this.stage.insert(new Q.OxygenCharge(this.p.x, this.p.y, true, this));
+        this.p.nRewards--;
+      }
+    }
+  }
+});
+
+Q.component("spawner2D", {
+  added: function(){
+    this.entity.p.cont = 15;
+  },
+  extend: {
+    spawn: function(dt){
+      if(this.p.movType != Q.state.get("dim")){ // En cuanto cambie la dimensión, lo eliminamos
+        this.destroy();
+      }
+      var nPlanet = Q.state.get('nPlanet');
+      // Cada 50 instantes creamos (o no) un nuevo objeto basura
+      if(this.p.t%50 == 0 && this.p.cont > 0 && nPlanet == 0){
+        var num = Math.round(Math.random()); //si num es igual a 0 inserta un objeto debris
+        if(num == 0){
+          //POSICIONAMIENTO
+          var posX, posY;
+          // Escogemos un Debris al azar
+          var debrisNum = Math.floor(Math.random() * 5) + 1;
+          var debrisObj = Q.state.get('debris')[debrisNum];
+          posX = this.p.play.p.x + screen.width/2;
+          posY = this.p.play.p.y + (Math.random() * 2 - 1)*screen.height/3;
+          // paramX, paramY, paramName, paramSheet, paramScale, zIndex, paramMovType, paramType
+          Q.stage().insert(new Q.Debris(posX, posY, debrisObj.name , debrisObj.sheet, debrisObj.scale, 4, this.p.movType, debrisObj.type));
+          this.p.cont--;
+        }
+      }
+    }
+  }
+});
+
+Q.component("spawner3D", {
+  added: function(){
+    this.entity.p.cont = 15;
+  },
+  extend: {
+    spawn: function(dt){
+      if(this.p.movType != Q.state.get("dim")){ // En cuanto cambie la dimensión, lo eliminamos
+        this.destroy();
+      }
+      var nDebris = Q.state.get('numDebris');
+      var nPlanet = Q.state.get('nPlanet');
+      var planets = Q.state.get('planets');
+      var planet = planets[nPlanet];
+      // Cada 100 instantes creamos (o no) un nuevo objeto basura
+      if(this.p.t%50 == 0 && this.p.cont > 0 && planet.g == 0){ // AQUÍ MEJOR COMPARAR CON .g == 0 
+        var num = Math.round(Math.random()); //si num es igual a 0 inserta un objeto debris
+        if(num == 0){
+          //POSICIONAMIENTO
+          var scale;
+          var posX, posY;
+          // Escogemos un Debris al azar
+          var debrisNum = Math.floor(Math.random() * 5) + 1;
+          var debrisObj = Q.state.get('debris')[debrisNum];
+          // paramX, paramY, paramName, paramSheet, paramScale, zIndex, paramMovType, paramType
+          Q.stage().insert(new Q.Debris(this.p.x, this.p.y, debrisObj.name , debrisObj.sheet, 0.25*debrisObj.scale, 4, this.p.movType, debrisObj.type));
+          this.p.cont--;
+        }
+      }
+    }
+  }
+});
+
+Q.Sprite.extend("DebrisSpawner", {
+   init:function( player, paramDim, paramX, paramY, paramInfoPlanet){
+    this._super({
+      play: player,
+      cont: 0,
+      t: 0,
+      movType: paramDim,
+      x: paramX,
+      y: paramY
+    });
+
+    // Separamos en casos
+    if(this.p.movType == "2D"){
+      this.add('spawner2D');
+    }
+    else if(this.p.movType == "3D"){
+      this.add('spawner3D');
+    }
+    else if(this.p.movType == "Orbit"){
+      this.p.infoPlanet = paramInfoPlanet;
+      this.add('spawnerOrbit');
+    }
+    else if(this.p.movType == "Asteroids"){
+      this.add('asteroidField');
+    }
+
+  },
+  step: function(dt){
+    this.p.t++;
+    if(this.p.cont <= 0){
+      this.destroy();
+    }
+    this.spawn(dt);
+  }
+});
 // Clase que va introducionde objetos Debris de forma aleatoria
+/*
 Q.Sprite.extend("DebrisSpawner", {
   init:function( player, paramDim, paramX, paramY){
     this._super({
@@ -1151,7 +1305,6 @@ Q.Sprite.extend("DebrisSpawner", {
       x: paramX,
       y: paramY
     });
-    console.log("Spawner");
   },
   step: function(dt){
     this.p.t++;
@@ -1189,7 +1342,7 @@ Q.Sprite.extend("DebrisSpawner", {
       }
     }
   }
-});
+});*/
 
 Q.Sprite.extend("Fondo", {
   init:function(asset, width, height){
@@ -1296,7 +1449,7 @@ Q.load(["space_station1.png", "space_station2.png", "space_station3.png", "explo
         Q.compileSheets("fuel.png", "fuel.json");
         Q.compileSheets("screw.png", "screw.json");
     if(Q.state.get("audio") == "on")
-      Q.audio.play('interstellar.mp3',{ loop: true });
+      //Q.audio.play('interstellar.mp3',{ loop: true });
     Q.stageScene("menu");
     
     //Q.debug = true;
@@ -1412,7 +1565,7 @@ Q.scene("Intro",function(stage) {
     Q.stageScene('level1', 0);
     //Q.stageScene('playerScene', 3);
     if(Q.state.get("audio") == "on")
-      Q.audio.play("interstellar.mp3", {loop: true});
+      //Q.audio.play("interstellar.mp3", {loop: true});
     Q.stageScene('HUD', 2);
     Q.stageScene('RADAR', 3);
 
@@ -1465,10 +1618,10 @@ Q.scene('menu',function(stage) {
 
   var enterText = stage.insert(new Q.UI.Button({x: screen.width/2+30, y: difLabel.p.y + 180, label: "Press ENTER to START", font: "ethnocentric", keyActionName: "confirm"}));
 
-  enterText.on("click",function() {
+  enterText.on("click",function(){
     Q.stageScene('Intro', 0);
-    if(Q.state.get("audio") == "on")
-      Q.audio.play("interstellar.mp3", {loop: true});
+    //if(Q.state.get("audio") == "on")
+      //Q.audio.play("interstellar.mp3", {loop: true});
   });
 
   buttonLM.on("click",function() {
