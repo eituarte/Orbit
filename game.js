@@ -15,6 +15,7 @@ Q.animations("Spaceship_anim", {
   still: { frames: [0], rate: 1, flip: false, loop: false},
   hit: { frames: [0,1,0,1,0,1,0], rate: 2/10, flip: false, loop: false, next: "still"}
 });
+/*
 Q.animations("spaceship_anim", {
   right: { frames: [1], rate: 1, flip: false, loop: false},
   left: { frames: [0], rate: 1, flip: false, loop: false},
@@ -22,6 +23,62 @@ Q.animations("spaceship_anim", {
   go_right: { frames: [3], rate: 1, flip: false, loop: false, next: "right"},
   right_3D: { frames: [5], rate: 1, flip: false, loop: false},
   left_3D: { frames: [4], rate: 1, flip: false, loop: false}
+});*/
+
+Q.animations("spaceship_pro_anim", {
+  right: { frames: [49], rate: 1, flip: false, loop: false},
+  left: { frames: [55], rate: 1, flip: false, loop: false},
+  go_left: { frames: [54], rate: 1, flip: false, loop: false, next: "left"},
+  go_right: { frames: [50], rate: 1, flip: false, loop: false, next: "right"},
+  0: { frames: [0], rate: 1, flip: false, loop: false},
+  1: { frames: [1], rate: 1, flip: false, loop: false},
+  2: { frames: [2], rate: 1, flip: false, loop: false},
+  3: { frames: [3], rate: 1, flip: false, loop: false},
+  4: { frames: [4], rate: 1, flip: false, loop: false},
+  5: { frames: [5], rate: 1, flip: false, loop: false},
+  6: { frames: [6], rate: 1, flip: false, loop: false},
+  10: { frames: [10], rate: 1, flip: false, loop: false},
+  11: { frames: [11], rate: 1, flip: false, loop: false},
+  12: { frames: [12], rate: 1, flip: false, loop: false},
+  13: { frames: [13], rate: 1, flip: false, loop: false},
+  14: { frames: [14], rate: 1, flip: false, loop: false},
+  15: { frames: [15], rate: 1, flip: false, loop: false},
+  16: { frames: [16], rate: 1, flip: false, loop: false},
+  20: { frames: [20], rate: 1, flip: false, loop: false},
+  21: { frames: [21], rate: 1, flip: false, loop: false},
+  22: { frames: [22], rate: 1, flip: false, loop: false},
+  23: { frames: [23], rate: 1, flip: false, loop: false},
+  24: { frames: [24], rate: 1, flip: false, loop: false},
+  25: { frames: [25], rate: 1, flip: false, loop: false},
+  26: { frames: [26], rate: 1, flip: false, loop: false},
+  30: { frames: [30], rate: 1, flip: false, loop: false},
+  31: { frames: [31], rate: 1, flip: false, loop: false},
+  32: { frames: [32], rate: 1, flip: false, loop: false},
+  33: { frames: [33], rate: 1, flip: false, loop: false},
+  34: { frames: [34], rate: 1, flip: false, loop: false},
+  35: { frames: [35], rate: 1, flip: false, loop: false},
+  36: { frames: [36], rate: 1, flip: false, loop: false},
+  40: { frames: [40], rate: 1, flip: false, loop: false},
+  41: { frames: [41], rate: 1, flip: false, loop: false},
+  42: { frames: [42], rate: 1, flip: false, loop: false},
+  43: { frames: [43], rate: 1, flip: false, loop: false},
+  44: { frames: [44], rate: 1, flip: false, loop: false},
+  45: { frames: [45], rate: 1, flip: false, loop: false},
+  46: { frames: [46], rate: 1, flip: false, loop: false},
+  50: { frames: [50], rate: 1, flip: false, loop: false},
+  51: { frames: [51], rate: 1, flip: false, loop: false},
+  52: { frames: [52], rate: 1, flip: false, loop: false},
+  53: { frames: [53], rate: 1, flip: false, loop: false},
+  54: { frames: [54], rate: 1, flip: false, loop: false},
+  55: { frames: [55], rate: 1, flip: false, loop: false},
+  56: { frames: [56], rate: 1, flip: false, loop: false},
+  60: { frames: [60], rate: 1, flip: false, loop: false},
+  61: { frames: [61], rate: 1, flip: false, loop: false},
+  62: { frames: [62], rate: 1, flip: false, loop: false},
+  63: { frames: [63], rate: 1, flip: false, loop: false},
+  64: { frames: [64], rate: 1, flip: false, loop: false},
+  65: { frames: [65], rate: 1, flip: false, loop: false},
+  66: { frames: [66], rate: 1, flip: false, loop: false},
 });
 
 Q.animations("explosion_anim", {
@@ -49,6 +106,8 @@ Q.Sprite.extend("Explosion", {
     this.add('animation, tween');
     this.on("finished", this, "end");
     this.p.sensor = true;
+    this.p.h = 1;
+    this.p.w = 1;
     this.animate({scale: this.p.scale * 2}, 2);
 
     // Dos comportamientos posibles: que explote y desaparezca, o que explote y continúe
@@ -144,9 +203,11 @@ Q.Sprite.extend("Planet", {
       t: 0
     });
     this.p.sensor = true;
+    this.add('animation, tween');
   },
   step: function(dt){
     //this.p.t++;
+    this.animate({angle: 360}, 8);
     if(this.p.ready == false){
       var infoPlanet = {
         nRewards: this.p.nRewards,
@@ -446,14 +507,14 @@ function radar(x){
 Q.Sprite.extend("Spaceship", {
   init:function(paramX, paramY, paramVx, paramVy, zIndex, paramDim){
     this._super({
-      sprite:"spaceship_anim",
-      sheet:"spaceship",
+      sprite:"spaceship_pro_anim",
+      sheet:"spaceship_sheet",
       x: paramX,
       y: paramY,
       vx: paramVx,
       vy: paramVy,
       gravity:0,
-      scale: 0.5,
+      scale: 0.7,
       dir: "right",
       t: 0,
       m: 0, // Factor de tiempo para actualizar las distancias
@@ -480,7 +541,7 @@ Q.Sprite.extend("Spaceship", {
           if(this.p.stuck){
             if(this.p.directions.up == true){
               this.p.y -= 10;
-              this.p.vy = -360; // Propulsamos con una velocidad relativamente alta para salir de órbita. 
+              this.p.vy = -this.p.directions.speed; // Propulsamos con una velocidad relativamente alta para salir de órbita. 
               // Se podría parametrizar en base a la atracción gravitatoria!
               this.p.stuck = false;
               var p = Q.state.get("player");
@@ -517,7 +578,7 @@ Q.Sprite.extend("Spaceship", {
           if(this.p.stuck){
             if(this.p.directions.up == false){
               this.p.y += 10;
-              this.p.vy = 360; // Propulsamos con una velocidad relativamente alta para salir de órbita. 
+              this.p.vy = this.p.directions.speed; // Propulsamos con una velocidad relativamente alta para salir de órbita. 
               // Se podría parametrizar en base a la atracción gravitatoria!
               this.p.stuck = false;
               var p = Q.state.get("player");
@@ -553,7 +614,7 @@ Q.Sprite.extend("Spaceship", {
           if(this.p.stuck){
             if(this.p.directions.right == false){
               this.p.x -= 10;
-              this.p.vx = -360; // Propulsamos con una velocidad relativamente alta para salir de órbita. 
+              this.p.vx = -this.p.directions.speed; // Propulsamos con una velocidad relativamente alta para salir de órbita. 
               // Se podría parametrizar en base a la atracción gravitatoria!
               this.p.stuck = false;
               var p = Q.state.get("player");
@@ -590,7 +651,7 @@ Q.Sprite.extend("Spaceship", {
           if(this.p.stuck){
             if(this.p.directions.right == true){
               this.p.x += 10; 
-              this.p.vx = 360; // Propulsamos con una velocidad relativamente alta para salir de órbita. 
+              this.p.vx = this.p.directions.speed; // Propulsamos con una velocidad relativamente alta para salir de órbita. 
               // Se podría parametrizar en base a la atracción gravitatoria!
               this.p.stuck = false;
               var p = Q.state.get("player");
@@ -720,13 +781,13 @@ Q.Sprite.extend("Spaceship", {
     Q.state.on("change.dim", this, function(){
       if(Q.state.get("dim") == "2D"){
         this.p.dimension = "2D";
-        this.p.x *= 2; // Atravesamos el espacio-tiempo
+        this.p.x = Math.floor(this.p.x)*2; // Atravesamos el espacio-tiempo
         Q.state.inc("stage");
         Q.Dialogue.play(2);
 
         var level = Q.state.get("stage");
         console.log("Ha cambiado el nivel a: " + level);
-        //this.stage.insert(new Q.DebrisSpawner(this, "Asteroids", this.p.x + 1000, this.p.y));
+        this.stage.insert(new Q.DebrisSpawner(this, "Asteroids", this.p.x + 1000, this.p.y));
         this.animate({scale: 0.5}, 2, Q.Easing.Quadratic.Out);
         Q.state.set("minDistanceX", this.p.x - 200);
       }
@@ -809,7 +870,8 @@ Q.Sprite.extend("Spaceship", {
         // Ahora guardamos las direcciones en las que puede despegar
         this.p.directions = { // Inicializamos a izquierda y abajo (se pueden usar las teclas DOWN y LEFT)
           right: false,
-          up: false
+          up: false,
+          speed: planets[nPlanet].g * 40
           // Podríamos incluso guardarnos datos del planeta para parametrizar la velocidad de propulsión
         }
         if(planets[nPlanet].x - this.p.x <= 0){ // Habilitamos hacia la derecha
@@ -857,6 +919,7 @@ Q.Sprite.extend("Spaceship", {
       this.stage.insert(new Q.Explosion(this.p.x, this.p.y, 0.4, true));
       this.destroy();
       // Llamar a EndGame
+      Q.stageScene("losegame", 6);
     }
     Q.state.set("player", p);
   },
@@ -1168,6 +1231,7 @@ Q.Sprite.extend("Debris", {
   }
 });
 
+// Componente para el SpawnerDebris. Puede ser campo de asteroides o lluvia de meteoritos
 Q.component("asteroidField",{
   added: function(){
     this.entity.p.cont = 30; // Hasta 30 asteroides
@@ -1185,8 +1249,8 @@ Q.component("asteroidField",{
         var y;
         var x;
         var rand = 1;
-        x = Math.floor(Math.random() * 3500); // Un número aleatorio entre 0 y 7999
-        x += this.p.x + 700; // Lo desplazamos a la posición correcta
+        x = this.p.x + 700 + Math.floor(Math.random() * 3500); // Un número aleatorio entre 0 y 7999
+        // Lo desplazamos a la posición correcta
 
         if((Math.random()) >= 0.75)
           rand = 0.5;
@@ -1194,16 +1258,16 @@ Q.component("asteroidField",{
         if(this.p.x < 30000){ // Si es un campo de asteroides
           // Crear meteoritos a partir de la posición y del player, y en un rango de posiciones x
           
-          y = this.p.play.p.y + Math.floor((Math.random() * 2 - 1)*screen.height/2);
-          debris = new Q.Debris(x, y, "meteorite" , "debris1", rand, 4, "2D", "Hostile");
+          y = Math.floor(this.p.play.p.y) + Math.floor((Math.random() * 2 - 1)*screen.height/2);
+          debris = new Q.Debris(x, y, "meteorite" , "debris1", rand, 4, "2D", "Hostile", null);
           this.stage.insert(debris);
           this.p.cont--;
         }
         else if (this.p.x > 40000 && this.p.x < 90000 && this.p.t%70 == 0){ // Si es una lluvia de asteroides
           y = 50; // Vienen por arriba de la pantalla
           console.log("y: " + y);
-          x = this.p.play.p.x + Math.floor(Math.random()*1000);
-          debris = new Q.Debris(x, y, "meteorite" , "debris1", 1, 4, "2D", "Hostile");
+          x = Math.floor(this.p.play.p.x) + Math.floor(Math.random()*1000);
+          debris = new Q.Debris(x, y, "meteorite" , "debris1", rand, 4, "2D", "Hostile", null);
           debris.p.vy =  120 + Math.floor(Math.random()*100); // Hacemos que caiga hacia abajo
           debris.p.vx = Math.round((Math.random() * 2 - 1))*200;
           this.stage.insert(debris);
@@ -1244,12 +1308,12 @@ Q.component("spawner2D", {
   extend: {
     spawn: function(dt){
       this.p.t++;
-      if(this.p.movType != Q.state.get("dim")){ // En cuanto cambie la dimensión, lo eliminamos
-        this.destroy();
-      }
+      //if(this.p.movType != Q.state.get("dim")){ // En cuanto cambie la dimensión, lo eliminamos
+        //this.destroy();
+      //}
       var nPlanet = Q.state.get('nPlanet');
       // Cada 50 instantes creamos (o no) un nuevo objeto basura
-      if(this.p.t%50 == 0 && this.p.cont > 0 && nPlanet == 0){
+      if(this.p.t%70 == 0 && this.p.cont > 0 && nPlanet == 0){
         var num = Math.round(Math.random()); //si num es igual a 0 inserta un objeto debris
         if(num == 0){
           //POSICIONAMIENTO
@@ -1261,7 +1325,7 @@ Q.component("spawner2D", {
           posY = this.p.play.p.y + (Math.random() * 2 - 1)*screen.height/3;
           // paramX, paramY, paramName, paramSheet, paramScale, zIndex, paramMovType, paramType
           Q.stage().insert(new Q.Debris(posX, posY, debrisObj.name , debrisObj.sheet, debrisObj.scale, 4, this.p.movType, debrisObj.type));
-          this.p.cont--;
+          //this.p.cont--;
         }
       }
     }
@@ -1300,6 +1364,7 @@ Q.component("spawner3D", {
   }
 });
 
+// Spawner de basura espacial. Puede ser tipo 2D, 3D, de órbita, o de Asteroides (campo de asteroides, lluvia de meteoritos)
 Q.Sprite.extend("DebrisSpawner", {
    init:function(player, paramDim, paramX, paramY, paramInfoPlanet){
     this._super({
@@ -1333,57 +1398,8 @@ Q.Sprite.extend("DebrisSpawner", {
     this.spawn(dt);
   }
 });
-// Clase que va introducionde objetos Debris de forma aleatoria
-/*
-Q.Sprite.extend("DebrisSpawner", {
-  init:function( player, paramDim, paramX, paramY){
-    this._super({
-      play: player,
-      cont: 0,
-      t: 0,
-      dim: paramDim,
-      x: paramX,
-      y: paramY
-    });
-  },
-  step: function(dt){
-    this.p.t++;
-    if(this.p.dim != Q.state.get("dim")){ // En cuanto cambie la dimensión, lo eliminamos
-      this.destroy();
-    }
-    var nDebris = Q.state.get('numDebris');
-    var nPlanet = Q.state.get('nPlanet');
-    var planets = Q.state.get('planets');
-    var planet = planets[nPlanet];
-    // Cada 100 instantes creamos (o no) un nuevo objeto basura
-    if(this.p.t%50 == 0 && this.p.cont < nDebris && (nPlanet == 0 || planet.g == 0)){ // AQUÍ MEJOR COMPARAR CON .g == 0 
-      var num = Math.round(Math.random()); //si num es igual a 0 inserta un objeto debris
-      if(num == 0){
-        //POSICIONAMIENTO
-        var scale;
-        var posX, posY;
-        // Escogemos un Debris al azar
-        var debrisNum = Math.floor(Math.random() * 5) + 1;
-        var debrisObj = Q.state.get('debris')[debrisNum];
 
-        if(this.p.dim == "2D"){
-          scale = debrisObj.scale;
-          posX = this.p.play.p.x + screen.width/2.5;
-          posY = this.p.play.p.y + (Math.random() * 2 - 1)*screen.height/3;
-        }
-        else if(this.p.dim == "3D"){
-          scale = 0.25*debrisObj.scale;
-          posX = this.p.x;
-          posY = this.p.y;
-        }
-        this.p.cont++;
-        // paramX, paramY, paramName, paramSheet, paramScale, zIndex, paramMovType, paramType
-        Q.stage().insert(new Q.Debris(posX, posY, debrisObj.name , debrisObj.sheet, scale, 4, this.p.dim, debrisObj.type));
-      }
-    }
-  }
-});*/
-
+// Fondo del menú principal
 Q.Sprite.extend("Fondo", {
   init:function(asset){
     this._super({
@@ -1429,7 +1445,7 @@ Q.scene("RADAR", function(stage){
 
     var textDistanceRadius = new Q.UI.Text({family: "ethnocentric",x: Q.width/2, y: 40, label: "Distance to core: " + distanceToRadius, color: "#FFDA6C", outlineWidth: 3, size: 14, align: "center"});
     var textOrbit = new Q.UI.Text({family: "ethnocentric",x: Q.width/2, y: 60, label: "Orbit: " + planetOrbit, color: "#FFDA6C", outlineWidth: 3, size: 14, align: "center"});
-    var textGravity = new Q.UI.Text({family: "ethnocentric",x: Q.width/2, y: 80, label: "Gravity: " + planetGravity, color: "#FFDA6C", outlineWidth: 3, size: 14, align: "center"});
+    var textGravity = new Q.UI.Text({family: "ethnocentric",x: Q.width/2, y: 80, label: "Gravitational pull: " + planetGravity, color: "#FFDA6C", outlineWidth: 3, size: 14, align: "center"});
     if(Q.state.get("dim") == "2D"){
       stage.insert(textName);
       stage.insert(textRadius);
@@ -1484,10 +1500,11 @@ Q.load(["wingame.png", "losegame.png", "space_station1.png", "space_station2.png
   "8.png","blackhole.png", "quarterStarfield.png",
   "quarterStarfield2.png", "vortex.png", "wormhole.png",
   "interiorCircularInfluence.png", "exteriorCircularInfluence.png",
-  "Spaceship.png", "Spaceship.json",
+  "Spaceship.png", "Spaceship.json", "spaceship_pro.json", "spaceship_sheet_min.png",
   "bgProst.png", "fondo.png", "fondo2.png", "debris1.png",
   "debris2.png", "debris1.json", "debris2.json", "bullet.png","screw.png", "screw.json", "fuel.png", "fuel.json", "oxygen.png", "oxygen.json", "leftarrow.png", "rightarrow.png"], function(){
-        Q.compileSheets("Spaceship.png", "Spaceship.json");
+        //Q.compileSheets("Spaceship.png", "Spaceship.json");
+        Q.compileSheets("spaceship_sheet_min.png", "spaceship_pro.json");
         Q.compileSheets("spaceship.png", "spaceship.json");
         Q.compileSheets("explosion.png", "explosion.json");
         Q.compileSheets("debris1.png", "debris1.json");
@@ -1630,8 +1647,8 @@ Q.scene("Intro",function(stage) {
 
     Q.stageScene('level1', 0);
     //Q.stageScene('playerScene', 3);
-    if(Q.state.get("audio") == "on")
-      Q.audio.play("interstellar.mp3", {loop: true});
+    //if(Q.state.get("audio") == "on")
+      //Q.audio.play("interstellar.mp3", {loop: true});
     Q.stageScene('HUD', 2);
     Q.stageScene('RADAR', 3);
 
@@ -1686,8 +1703,8 @@ Q.scene('menu',function(stage) {
 
   enterText.on("click",function() {
     Q.stageScene('Intro', 0);
-    if(Q.state.get("audio") == "on")
-      Q.audio.play("interstellar.mp3", {loop: true});
+    //if(Q.state.get("audio") == "on")
+      //Q.audio.play("interstellar.mp3", {loop: true});
   });
 
   buttonLM.on("click",function() {
