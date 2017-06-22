@@ -134,7 +134,7 @@ Q.Sprite.extend("Station", {
       x: paramX,
       y: paramY,
       scale: 1,
-      zIndex: 2
+      z: 5
     });
     this.add('animation, tween');
     this.p.sensor = true;
@@ -169,14 +169,14 @@ Q.Sprite.extend("Tunnel", {
 
 // Objeto "astro" agujero negro. Sprite con la forma de Gargantua
 Q.Sprite.extend("Wormhole", {
-  init:function(paramX, paramY, paramAsset, z){
+  init:function(paramX, paramY, paramAsset, zIndex){
     this._super({
       asset: paramAsset,
       x: paramX,
       y: paramY, 
       gravity:0,
       scale: 0.2,
-      zIndex: 3
+      z: zIndex
     });
     this.add('2d, animation, tween');
     //this.p.sensor=true;
@@ -190,7 +190,7 @@ Q.Sprite.extend("Wormhole", {
 
 // Sprite de planeta
 Q.Sprite.extend("Planet", {
-  init: function(paramX, paramY, paramAsset, paramR, paramD, paramN, z, paramRewards){
+  init: function(paramX, paramY, paramAsset, paramR, paramD, paramN, zIndex, paramRewards){
     this._super({
       asset: paramAsset,
       x: paramX,
@@ -198,7 +198,7 @@ Q.Sprite.extend("Planet", {
       d: paramD,
       r: paramR,
       n: paramN,
-      zIndex: z,
+      z: zIndex,
       nRewards: paramRewards,
       ready: false,
       t: 0
@@ -260,44 +260,6 @@ function createPlanets(stage){
 
   Q.state.set("orbits", orbits);
 }
-
-// Sprite que representa la deformación del espacio-tiempo alrededor del Wormhole (efecto visual). No necesariamente útil.
-Q.Sprite.extend("Blackhole", {
-  init:function(paramX, paramY, paramAsset, paramScale, z){
-    this._super({
-      asset: paramAsset,
-      x: paramX,
-      y: paramY, 
-      gravity: 0,
-      scale: paramScale,
-      created: false,
-      zIndex: z
-    });
-    this.add('2d, animation, tween');
-    this.p.sensor=true;
-    // Lo eliminamos cuando la nave choca con él
-    this.on("hit", this, function(collision){
-      if(collision.obj.isA("Spaceship")){
-        this.destroy();
-      }
-    });
-  },
-  // Creamos recursivamente los "anillos de distorsión", según la escala inicial
-  step: function(){
-    if(this.p.created == false){
-      this.p.created = true;
-      // Caso recursivo
-      if(this.p.scale > 0.4 && this.p.asset != "wormhole.png"){
-        this.animate({angle: 5000 * (1.2 - this.p.scale)}, 180);
-        this.stage.insert(new Q.Blackhole((this.p.x + (this.p.w - this.p.w*this.p.scale)/100), (this.p.y + (this.p.h - this.p.h*this.p.scale)/100), "interiorCircularInfluence.png", this.p.scale - 0.2, 1));
-      }
-      // Caso base. Cuando ha terminado de crear los anillos, crea el Wormhole
-      else if (this.p.scale < 0.4 && this.p.scale > 0.2){
-        this.stage.insert(new Q.Wormhole((this.p.x + (this.p.w - this.p.w*this.p.scale)/100), (this.p.y + (this.p.h - this.p.h*this.p.scale)/100), "wormhole.png", 2));
-      }
-    }
-  }
-});
 
 // Clase que representa un lado del campo de estrellas de EventHorizon
 Q.Sprite.extend("QuarterStarfield", {
@@ -370,8 +332,6 @@ Q.Sprite.extend("EventHorizon", {
     }}); 
     // Lo vamos girando con el tiempo
     this.animate({angle: -500, scale: 3}, 24);
-    // Guardamos el objeto en Q.state para posterior uso en modo 3D
-    Q.state.set('eventHorizon', this);
   },
   step: function(){
     this.p.t++;
@@ -603,8 +563,8 @@ Q.Sprite.extend("Spaceship", {
     this.play("right");
     
     this.p.sensor = true;
-    this.p.h = 16;
-    this.p.w = 16;
+    this.p.h = 32;
+    this.p.w = 128;
 
     // En lugar de usar PlatformerControls, usamos la propulsión en el espacio
     // Separamos en dos casos: 2D y 3D.
@@ -813,7 +773,7 @@ Q.Sprite.extend("Spaceship", {
           // Después crear el resto de elementos
         var col = collision.obj;
         Q.state.set("dim", "3D");
-        this.play["go_3D"];
+        this.play("go_3D");
         Q.Dialogue.play("wormhole");
         this.animate({x: collision.obj.p.x, y: collision.obj.p.y + 200}, 5, {callback: function(){
           // Cambiamos el modo de juego a 3D
@@ -847,8 +807,6 @@ Q.Sprite.extend("Spaceship", {
         this.del("mov3D"); // Quitamos el componente de movimiento en 3D
         this.p.x = Math.floor(this.p.x)*2; // Atravesamos el espacio-tiempo
         Q.state.inc("stage");
-        Q.Dialogue.play(2);
-
         var level = Q.state.get("stage");
         console.log("Ha cambiado el nivel a: " + level);
         this.stage.insert(new Q.DebrisSpawner(this, "Asteroids", this.p.x + 1000, this.p.y));
@@ -1028,15 +986,6 @@ Q.Sprite.extend("Bullet", {
     });
     this.add('animation, tween');
     this.p.sensor=true;
-
-    // Si estamos en modo 3D
-    if(Q.state.get("dim") == "3D"){
-       var evH = Q.state.get('eventHorizon'); // Cogemos los datos del Horizonte de sucesos de Q.state
-        // Disparamos hacia el centro del horizonte de sucesos (hacia el final del túnel)
-        this.animate({x: evH.p.x, y: evH.p.y, scale: 0}, 1, {callback: function(){
-          this.destroy();
-      }});
-    }
   },
   step: function(dt){
     this.p.t++;
@@ -1219,7 +1168,6 @@ Q.component("hostile", {
         var posX = this.entity.p.x; 
         var posY = this.entity.p.y;
         //paramX, paramY, paramScale, explode
-        this.entity.stage.insert(new Q.Explosion(posX, posY, this.entity.p.scale/1.5, true));
         if(this.entity.p.name == "meteorite"){ // Si es un meteorito
           if(this.entity.p.scale >= 0.5){
             // paramX, paramY, paramName, paramSheet, paramScale, zIndex, paramMovType, paramType, paramPlanet
@@ -1227,6 +1175,7 @@ Q.component("hostile", {
             Q.stage().insert(new Q.Debris(posX, posY, this.entity.p.name, this.entity.p.sheet, this.entity.p.scale/2, 4, this.entity.p.movType, "Hostile", this.entity.p.planet));
           }  
         }else{ // Si no es un meteorito
+           this.entity.stage.insert(new Q.Explosion(posX, posY, this.entity.p.scale/1.5, true));
           var rand = Math.round(Math.random());
           if(rand == 0){
             Q.stage().insert(new Q.Debris(posX, posY, "OxygenCharge", "oxygen", 1, 4, this.entity.p.movType, "Reward", this.entity.p.planet));
@@ -1604,21 +1553,21 @@ Q.scene("level1",function(stage) {
 Q.scene("Intro",function(stage) {
      
   // A los 2 segundos, comienza el diálogo
-      Q.Dialogue.play("1");
+  Q.Dialogue.play("1");
   
   var s1, s2, s3;
 
 
   // Serie de explosiones en el satélite
-  setTimeout(function(){
+  var timeout1 = setTimeout(function(){
       stage.insert(new Q.Explosion(Q.width/3+50, Q.height/3+20, 0.5, true));
       s2.animate({angle: 60, y: s1.p.y - 100, x: s1.p.x + 120}, 40);
   }, 14000);
-  setTimeout(function(){
+  var timeout2 = setTimeout(function(){
       stage.insert(new Q.Explosion(Q.width/2+20, Q.height/3+10, 0.3, true));
       
   }, 15000);
-  setTimeout(function(){
+  var timeout3 = setTimeout(function(){
       stage.insert(new Q.Explosion(Q.width/2, Q.height/2, 0.8, true));
       s1.animate({angle: -20, y: s1.p.y - 100, x: s1.p.x + 120}, 40);
       s3.animate({angle: 40, y: s1.p.y - 100, x: s1.p.x - 120}, 40);
@@ -1626,7 +1575,7 @@ Q.scene("Intro",function(stage) {
 
 
   // Hacemos que desaparezcan las partes del satélite con fundido de salida
-  setTimeout(function(){
+  var timeout4 = setTimeout(function(){
       s1.animate({opacity: 0}, 2);
       s2.animate({opacity: 0}, 2);
       s3.animate({opacity: 0}, 2);
@@ -1639,8 +1588,15 @@ Q.scene("Intro",function(stage) {
   var s3 = stage.insert(new Q.Station(Q.width/2, Q.height/2, "space_station3.png"));
   
   button.on("click",function() {
-    Q.clearStages();
+    // Destruimos el dialogo que se estaba reproduciendo
+    Q.Dialogue.destroy();
+    // Eliminamos los intervalos ya que no queremos que se generen explosiones
+    clearTimeout(timeout1);
+    clearTimeout(timeout2);
+    clearTimeout(timeout3);
+    clearTimeout(timeout4);
 
+    Q.clearStages();
     Q.state.reset({
       dim: "2D",
       stage: 1,
