@@ -410,8 +410,8 @@ Q.state.set({
         2: {x: 21000},
         3: {x: 84000}
       },
-      modoDios: "on",
-      audio: "on",
+      modoDios: "off",
+      audio: "off",
       difficulties: ['LOW', 'MEDIUM', 'HIGH'],
       difficulty: 0
  
@@ -1424,7 +1424,8 @@ Q.Sprite.extend("Fondo", {
       w: Q.width,
       h: Q.height,
       x: Q.width/2,
-      y: Q.height/2
+      y: Q.height/2,
+      z: -2
     });
     this.p.asset = asset;
     this.size(true);
@@ -1650,8 +1651,8 @@ Q.scene("Intro",function(stage) {
       orbimeters: 130000,
       distanceToRadius: 0,
       minDistanceX: 0,
-      modoDios: "on",
-      audio: "on",
+      modoDios: "off",
+      audio: "off",
       difficulties: ['LOW', 'MEDIUM', 'HIGH'],
       difficulty: 0,
       messages: {
@@ -1706,16 +1707,17 @@ Q.scene('endGame',function(stage) {
 });
 
 
-Q.scene('menu',function(stage) {
-  var fondo = stage.insert(new Q.Fondo("fondo.png",screen.width,screen.height));
+Q.scene('menu', function(stage) {
 
-  var musicTextLabel = stage.insert(new Q.UI.Text({x: screen.width/2 - 100,y: (screen.height/2), label: "Music", family: "ethnocentric",color: "#FFFFFF"}));
-  var difTextLabel = stage.insert(new Q.UI.Text({x: screen.width/2 - 100 ,y: (screen.height/2) +80, label: "Difficulty", family: "ethnocentric",color: "#FFFFFF"}));
-  var godTextLabel = stage.insert(new Q.UI.Text({x: screen.width/2 - 100 ,y: (screen.height/2) +160, label: "God Mode", family: "ethnocentric",color: "#FFFFFF"}));
+  var fondo = stage.insert(new Q.Fondo("fondo.png"));
 
-  var musicLabel = stage.insert(new Q.UI.Text({x: screen.width/2 + 150,y: screen.height/2, label: "ON", family: "ethnocentric",color: "#FFFFFF"}));
-  var difLabel = stage.insert(new Q.UI.Text({x: screen.width/2 + 150 ,y: screen.height/2 +80, label: "LOW", family: "ethnocentric",color: "#FFFFFF"}));
-  var godLabel = stage.insert(new Q.UI.Text({x: screen.width/2 + 150 ,y: screen.height/2 +160, label: "OFF", family: "ethnocentric",color: "#FFFFFF"}));
+  var musicTextLabel = stage.insert(new Q.UI.Text({x: Q.width/2 - 100,y: (Q.height/2), label: "Music", family: "ethnocentric",color: "#FFFFFF"}));
+  var difTextLabel = stage.insert(new Q.UI.Text({x: Q.width/2 - 100 ,y: (Q.height/2) +80, label: "Difficulty", family: "ethnocentric",color: "#FFFFFF"}));
+  var godTextLabel = stage.insert(new Q.UI.Text({x: Q.width/2 - 100 ,y: (Q.height/2) +160, label: "God Mode", family: "ethnocentric",color: "#FFFFFF"}));
+
+  var musicLabel = stage.insert(new Q.UI.Text({x: Q.width/2 + 150,y: Q.height/2, label: "ON", family: "ethnocentric",color: "#FFFFFF"}));
+  var difLabel = stage.insert(new Q.UI.Text({x: Q.width/2 + 150 ,y: Q.height/2 +80, label: "LOW", family: "ethnocentric",color: "#FFFFFF"}));
+  var godLabel = stage.insert(new Q.UI.Text({x: Q.width/2 + 150 ,y: Q.height/2 +160, label: "ON", family: "ethnocentric",color: "#FFFFFF"}));
 
   var buttonLM = stage.insert(new Q.UI.Button({x: musicLabel.p.x - 80, y: musicLabel.p.y+15, w: 50, h: 50, asset:"leftarrow.png" }));
   var buttonRM = stage.insert(new Q.UI.Button({x: musicLabel.p.x + 80, y: musicLabel.p.y+15, w: 50, h: 50, asset:"rightarrow.png" }));
@@ -1724,7 +1726,27 @@ Q.scene('menu',function(stage) {
   var buttonLG = stage.insert(new Q.UI.Button({x: godLabel.p.x - 110, y: godLabel.p.y+15, w: 50, h: 50, asset:"leftarrow.png" }));
   var buttonRG = stage.insert(new Q.UI.Button({x: godLabel.p.x + 110, y: godLabel.p.y+15, w: 50, h: 50, asset:"rightarrow.png" }));
 
-  var enterText = stage.insert(new Q.UI.Button({x: screen.width/2+30, y: difLabel.p.y + 180, label: "Press ENTER to START", font: "ethnocentric", keyActionName: "confirm"}));
+  var enterText = stage.insert(new Q.UI.Button({x: Q.width/2+30, y: difLabel.p.y + 180, label: "Press ENTER to START", font: "ethnocentric", keyActionName: "confirm"}));
+
+  if (Q.state.get('audio') == 'off' && Q.state.get('modoDios') == 'off') {
+    musicLabel.p.label = "OFF";
+    godLabel.p.label = "OFF";
+
+  } else if (Q.state.get('modoDios') == 'off') {
+    musicLabel.p.label = "ON";
+    godLabel.p.label = "OFF";
+    Q.audio.play('interstellar.mp3',{ loop: true });
+
+  } else if (Q.state.get('modoDios') == 'on'){
+    musicLabel.p.label = "ON";
+    godLabel.p.label = "ON";
+    Q.audio.play('godmode.mp3',{ loop: true });
+
+  } else {
+    musicLabel.p.label = "OFF";
+    godLabel.p.label = "ON";
+
+  }
 
   enterText.on("click",function() {
     Q.stageScene('Intro', 0);
@@ -1732,28 +1754,38 @@ Q.scene('menu',function(stage) {
       //Q.audio.play("interstellar.mp3", {loop: true});
   });
 
-  buttonLM.on("click",function() {
-    var m = Q.state.get('audio');
-    if(m == 'on'){
-      Q.state.set('audio', "off");
-      Q.audio.stop();
-      musicLabel.p.label = "OFF";
-    }else{
+  buttonLM.on("click", function() {
+    var music = Q.state.get('audio');
+    if(music == 'on'){
+        Q.state.set('audio', "off");
+        Q.audio.stop();
+        musicLabel.p.label = "OFF";
+
+    } else {
+      if (Q.state.get('modoDios') == 'on') {
+        Q.audio.play('godmode.mp3',{ loop: true });
+      } else {
+        Q.audio.play('interstellar.mp3',{ loop: true });
+      }
       Q.state.set('audio', "on");
-      Q.audio.play("interstellar.mp3", {loop: true});
       musicLabel.p.label = "ON";
     }
   });
 
   buttonRM.on("click",function() {
-    var m = Q.state.get('audio');
-    if(m == 'on'){
-      Q.state.set('audio', "off");
-      Q.audio.stop();
-      musicLabel.p.label = "OFF";
-    }else{
+    var music = Q.state.get('audio');
+    if(music == 'on'){
+        Q.state.set('audio', "off");
+        Q.audio.stop();
+        musicLabel.p.label = "OFF";
+
+    } else {
+      if (Q.state.get('modoDios') == 'on') {
+        Q.audio.play('godmode.mp3',{ loop: true });
+      } else {
+        Q.audio.play('interstellar.mp3',{ loop: true });
+      }
       Q.state.set('audio', "on");
-      Q.audio.play("interstellar.mp3", {loop: true});
       musicLabel.p.label = "ON";
     }
   });
@@ -1783,37 +1815,48 @@ Q.scene('menu',function(stage) {
   });
 
   buttonLG.on("click",function() {
-    var m = Q.state.get('modoDios');
-    if(m == 'on'){
+    var music = Q.state.get('audio');
+    
+    if (Q.state.get('modoDios') == 'on') {
       Q.state.set('modoDios', "off");
       godLabel.p.label = "OFF";
       fondo.p.asset = "fondo.png";
-      Q.audio.stop('godmode.mp3');
-    }else{
+      if(music == 'on'){
+        Q.audio.stop();
+        Q.audio.play('interstellar.mp3',{ loop: true });
+      }
+
+    } else {
       Q.state.set('modoDios', "on");
       godLabel.p.label = "ON";
       fondo.p.asset = "fondo2.png";
-      if(Q.state.get('audio') == 'on'){
+      if(music == 'on'){
+        Q.audio.stop();
         Q.audio.play('godmode.mp3',{ loop: true });
       }
-    }
+    }      
   });
 
   buttonRG.on("click",function() {
-    var m = Q.state.get('modoDios');
-    if(m == 'on'){
+    var music = Q.state.get('audio');
+    if (Q.state.get('modoDios') == 'on') {
       Q.state.set('modoDios', "off");
       godLabel.p.label = "OFF";
       fondo.p.asset = "fondo.png";
-      Q.audio.stop('godmode.mp3');
-    }else{
+      if(music == 'on'){
+        Q.audio.stop();
+        Q.audio.play('interstellar.mp3',{ loop: true });
+      }
+
+    } else {
       Q.state.set('modoDios', "on");
       godLabel.p.label = "ON";
       fondo.p.asset = "fondo2.png";
-      if(Q.state.get('audio') == 'on'){
+      if(music == 'on'){
+        Q.audio.stop();
         Q.audio.play('godmode.mp3',{ loop: true });
       }
-    }
+    } 
   });
 
 });
