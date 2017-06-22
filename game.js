@@ -30,55 +30,56 @@ Q.animations("spaceship_pro_anim", {
   left: { frames: [55], rate: 1, flip: false, loop: false},
   go_left: { frames: [54], rate: 1, flip: false, loop: false, next: "left"},
   go_right: { frames: [50], rate: 1, flip: false, loop: false, next: "right"},
-  0: { frames: [0], rate: 1, flip: false, loop: false},
-  1: { frames: [1], rate: 1, flip: false, loop: false},
-  2: { frames: [2], rate: 1, flip: false, loop: false},
-  3: { frames: [3], rate: 1, flip: false, loop: false},
-  4: { frames: [4], rate: 1, flip: false, loop: false},
-  5: { frames: [5], rate: 1, flip: false, loop: false},
-  6: { frames: [6], rate: 1, flip: false, loop: false},
-  10: { frames: [10], rate: 1, flip: false, loop: false},
-  11: { frames: [11], rate: 1, flip: false, loop: false},
-  12: { frames: [12], rate: 1, flip: false, loop: false},
-  13: { frames: [13], rate: 1, flip: false, loop: false},
-  14: { frames: [14], rate: 1, flip: false, loop: false},
-  15: { frames: [15], rate: 1, flip: false, loop: false},
-  16: { frames: [16], rate: 1, flip: false, loop: false},
-  20: { frames: [20], rate: 1, flip: false, loop: false},
-  21: { frames: [21], rate: 1, flip: false, loop: false},
-  22: { frames: [22], rate: 1, flip: false, loop: false},
-  23: { frames: [23], rate: 1, flip: false, loop: false},
-  24: { frames: [24], rate: 1, flip: false, loop: false},
-  25: { frames: [25], rate: 1, flip: false, loop: false},
-  26: { frames: [26], rate: 1, flip: false, loop: false},
-  30: { frames: [30], rate: 1, flip: false, loop: false},
-  31: { frames: [31], rate: 1, flip: false, loop: false},
-  32: { frames: [32], rate: 1, flip: false, loop: false},
-  33: { frames: [33], rate: 1, flip: false, loop: false},
-  34: { frames: [34], rate: 1, flip: false, loop: false},
-  35: { frames: [35], rate: 1, flip: false, loop: false},
-  36: { frames: [36], rate: 1, flip: false, loop: false},
-  40: { frames: [40], rate: 1, flip: false, loop: false},
-  41: { frames: [41], rate: 1, flip: false, loop: false},
-  42: { frames: [42], rate: 1, flip: false, loop: false},
-  43: { frames: [43], rate: 1, flip: false, loop: false},
-  44: { frames: [44], rate: 1, flip: false, loop: false},
-  45: { frames: [45], rate: 1, flip: false, loop: false},
-  46: { frames: [46], rate: 1, flip: false, loop: false},
-  50: { frames: [50], rate: 1, flip: false, loop: false},
-  51: { frames: [51], rate: 1, flip: false, loop: false},
-  52: { frames: [52], rate: 1, flip: false, loop: false},
-  53: { frames: [53], rate: 1, flip: false, loop: false},
-  54: { frames: [54], rate: 1, flip: false, loop: false},
-  55: { frames: [55], rate: 1, flip: false, loop: false},
-  56: { frames: [56], rate: 1, flip: false, loop: false},
-  60: { frames: [60], rate: 1, flip: false, loop: false},
-  61: { frames: [61], rate: 1, flip: false, loop: false},
-  62: { frames: [62], rate: 1, flip: false, loop: false},
-  63: { frames: [63], rate: 1, flip: false, loop: false},
-  64: { frames: [64], rate: 1, flip: false, loop: false},
-  65: { frames: [65], rate: 1, flip: false, loop: false},
-  66: { frames: [66], rate: 1, flip: false, loop: false},
+  go_3D: { frames: [21, 28, 36, 37, 38], rate: 1/3, flip: false, loop: false, next: "38"},
+  "-33": { frames: [0, 0, 0, 0, 0, 0, 0], rate: 1, flip: false, loop: false},
+  "-23": { frames: [1], rate: 1, flip: false, loop: false},
+  "-13": { frames: [2], rate: 1, flip: false, loop: false},
+  "03": { frames: [3], rate: 1, flip: false, loop: false},
+  "13": { frames: [4], rate: 1, flip: false, loop: false},
+  "23": { frames: [5], rate: 1, flip: false, loop: false},
+  "33": { frames: [6], rate: 1, flip: false, loop: false},
+  "-32": { frames: [7], rate: 1, flip: false, loop: false},
+  "-22": { frames: [8], rate: 1, flip: false, loop: false},
+  "-12": { frames: [9], rate: 1, flip: false, loop: false},
+  "02": { frames: [10], rate: 1, flip: false, loop: false},
+  "12": { frames: [11], rate: 1, flip: false, loop: false},
+  "22": { frames: [12], rate: 1, flip: false, loop: false},
+  "32": { frames: [13], rate: 1, flip: false, loop: false},
+  "-31": { frames: [14], rate: 1, flip: false, loop: false},
+  "-21": { frames: [15], rate: 1, flip: false, loop: false},
+  "-11": { frames: [16], rate: 1, flip: false, loop: false},
+  "01": { frames: [17], rate: 1, flip: false, loop: false},
+  "11": { frames: [18], rate: 1, flip: false, loop: false},
+  "21": { frames: [19], rate: 1, flip: false, loop: false},
+  "31": { frames: [20], rate: 1, flip: false, loop: false},
+  "-30": { frames: [21], rate: 1, flip: false, loop: false},
+  "-20": { frames: [22], rate: 1, flip: false, loop: false},
+  "-10": { frames: [23], rate: 1, flip: false, loop: false},
+  "00": { frames: [24], rate: 1, flip: false, loop: false},
+  "10": { frames: [25], rate: 1, flip: false, loop: false},
+  "20": { frames: [26], rate: 1, flip: false, loop: false},
+  "30": { frames: [27], rate: 1, flip: false, loop: false},
+  "-3-1": { frames: [28], rate: 1, flip: false, loop: false},
+  "-2-1": { frames: [29], rate: 1, flip: false, loop: false},
+  "-1-1": { frames: [30], rate: 1, flip: false, loop: false},
+  "0-1": { frames: [31], rate: 1, flip: false, loop: false},
+  "1-1": { frames: [32], rate: 1, flip: false, loop: false},
+  "2-1": { frames: [33], rate: 1, flip: false, loop: false},
+  "3-1": { frames: [34], rate: 1, flip: false, loop: false},
+  "-3-2": { frames: [35], rate: 1, flip: false, loop: false},
+  "-2-2": { frames: [36], rate: 1, flip: false, loop: false},
+  "-1-2": { frames: [37], rate: 1, flip: false, loop: false},
+  "0-2": { frames: [38], rate: 1, flip: false, loop: false},
+  "1-2": { frames: [39], rate: 1, flip: false, loop: false},
+  "2-2": { frames: [40], rate: 1, flip: false, loop: false},
+  "3-2": { frames: [41], rate: 1, flip: false, loop: false},
+  "-3-3": { frames: [42], rate: 1, flip: false, loop: false},
+  "-2-3": { frames: [43], rate: 1, flip: false, loop: false},
+  "-1-3": { frames: [44], rate: 1, flip: false, loop: false},
+  "0-3": { frames: [45], rate: 1, flip: false, loop: false},
+  "1-3": { frames: [46], rate: 1, flip: false, loop: false},
+  "2-3": { frames: [47], rate: 1, flip: false, loop: false},
+  "3-3": { frames: [48], rate: 1, flip: false, loop: false},
 });
 
 Q.animations("explosion_anim", {
@@ -503,6 +504,81 @@ function radar(x){
     }
 }
 
+Q.component("mov3D", {
+  added: function(){
+    // Fotogramas posibles en 3D. Rango desde -3 a +3
+    this.entity.p.frameX = 0;
+    this.entity.p.frameY = 0;
+
+    // Direcciones posibles en 3D en ejes X e Y. Valores: -1, 0, 1
+    this.entity.p.dirX = 0;
+    this.entity.p.dirY = 0;
+    this.entity.p.speed = 220; // Velocidad en ejes X e Y
+
+    Q.input.on("down", this, function(){
+      this.entity.p.dirY--;
+      if(this.entity.p.dirY <= -1){
+        this.entity.p.dirY = -1;
+      }
+    });
+
+    Q.input.on("up", this, function(){
+      this.entity.p.dirY++;
+      if(this.entity.p.dirY > 1){
+        this.entity.p.dirY = 1;
+      }
+    });
+
+    Q.input.on("left", this, function(){
+      this.entity.p.dirX--;
+      if(this.entity.p.dirX <= -1){
+        this.entity.p.dirX = -1;
+      }
+    });
+
+    Q.input.on("right", this, function(){
+      this.entity.p.dirX++;
+      if(this.entity.p.dirX > 1){
+        this.entity.p.dirX = 1;
+      }
+    });
+  },
+  extend: {
+    checkRange: function(){ // Comprueba que no se pase de las posibilidades de los Frames X e Y del spriteSheet
+      if(this.p.frameX <= -3){
+        this.p.frameX = -3;
+      }
+      if(this.p.frameX >= 3){
+        this.p.frameX = 3;
+      }
+      if(this.p.frameY <= -3){
+        this.p.frameY = -3;
+      }
+      if(this.p.frameY >= 3){
+        this.p.frameY = 3;
+      }
+      if(this.p.y <= 100){
+        this.p.y = 100;
+      }
+    },
+    playFrame: function(){
+      //if(this.p.t%70 == 0){
+        var frame = "" + this.p.frameX + this.p.frameY + "";
+        this.play(frame);
+        console.log("Frame: " + frame);
+      //}
+    },
+    updateFrame: function(){ // Actualiza los fotogramas del spriteSheet según las direcciones X e Y
+      this.p.frameX += this.p.dirX;
+      this.p.frameY += this.p.dirY;
+      this.checkRange();
+    },
+    updateSpeed: function(){
+      this.p.vx = this.p.speed * this.p.dirX;
+      this.p.vy = -this.p.speed * this.p.dirY;
+    }
+  }
+});
 // Objeto del jugador
 Q.Sprite.extend("Spaceship", {
   init:function(paramX, paramY, paramVx, paramVy, zIndex, paramDim){
@@ -528,6 +604,7 @@ Q.Sprite.extend("Spaceship", {
     
     this.p.sensor = true;
     this.p.h = 16;
+    this.p.w = 16;
 
     // En lugar de usar PlatformerControls, usamos la propulsión en el espacio
     // Separamos en dos casos: 2D y 3D.
@@ -565,10 +642,6 @@ Q.Sprite.extend("Spaceship", {
           }
         }
       }
-      else{
-        this.play(this.p.dir + "_3D");
-        this.p.vy = -120;
-      }
     });
     Q.input.on("down", this, function(){
       if(this.p.dimension == "2D"){
@@ -601,10 +674,6 @@ Q.Sprite.extend("Spaceship", {
           }
         }
       }
-      else{
-        this.play(this.p.dir + "_3D");
-        this.p.vy = 120;
-      }
     });
     Q.input.on("left", this, function(){
       this.p.dir = "left";
@@ -636,10 +705,6 @@ Q.Sprite.extend("Spaceship", {
             Q.state.set("player", p); 
           }
         }
-      }
-      else{
-        this.play(this.p.dir + "_3D");
-        this.p.vx = -120;
       }
     });
     Q.input.on("right", this, function(){
@@ -674,33 +739,28 @@ Q.Sprite.extend("Spaceship", {
           }
         }
       }
-      else{
-        this.play(this.p.dir + "_3D");
-        this.p.vx = 120;
-      }
     });
     // Cuando se dispara con SPACE, creamos una bala con la dirección correcta
     Q.input.on("fire", this, function(){
-      var offsetX = (this.p.dir == "right" ? 25 : -25);
-      var p = Q.state.get("player");
-      if(p.blaster > 0){
-        p.blaster -= 5;
-        Q.stage().insert(new Q.Bullet(this.p.x + offsetX, this.p.y + 8, this.p.dir , this.p.x, this.p.y));
-        if(Q.state.get("audio") == "on")
-          Q.audio.play("fireAux.mp3"); // Reproducimos audio de blaster
-      }
-      if(p.blaster <= 0)
-        p.blaster = 0;
-      Q.state.set("player", p);
-      
+      if(this.p.dimension == "2D"){ // Solo puede disparar en modo 2D
+        var offsetX = (this.p.dir == "right" ? 25 : -25);
+        var p = Q.state.get("player");
+        if(p.blaster > 0){
+          p.blaster -= 5;
+          Q.stage().insert(new Q.Bullet(this.p.x + offsetX, this.p.y + 8, this.p.dir , this.p.x, this.p.y));
+          if(Q.state.get("audio") == "on")
+            Q.audio.play("fireAux.mp3"); // Reproducimos audio de blaster
+        }
+        if(p.blaster <= 0)
+          p.blaster = 0;
+        Q.state.set("player", p);
+      }      
     });
 
     // Esto es por propósitos de desarrollador. Para saber las coordenadas de la nave en un momento concreto
     Q.input.on("S", this, function(){
       console.log("x: " + this.p.x);
       console.log("y: " + this.p.y);
-      var level = Q.state.get("stage");
-        console.log("Ha cambiado el nivel a: " + level);
     });
 
     //----------------MODO DIOS --------------- //
@@ -752,10 +812,13 @@ Q.Sprite.extend("Spaceship", {
         // Primero escalar el agujero negro
           // Después crear el resto de elementos
         var col = collision.obj;
+        Q.state.set("dim", "3D");
+        this.play["go_3D"];
         Q.Dialogue.play("wormhole");
         this.animate({x: collision.obj.p.x, y: collision.obj.p.y + 200}, 5, {callback: function(){
           // Cambiamos el modo de juego a 3D
-          Q.state.set("dim", "3D");
+          //Q.state.set("dim", "3D");
+          this.add("mov3D"); // Añadimos el componente de movimiento en 3D
           
         }});
         collision.obj.animate({scale: 70, opacity: 0.5}, 6, Q.Easing.Quadratic.InOut, {callback: function(){
@@ -781,6 +844,7 @@ Q.Sprite.extend("Spaceship", {
     Q.state.on("change.dim", this, function(){
       if(Q.state.get("dim") == "2D"){
         this.p.dimension = "2D";
+        this.del("mov3D"); // Quitamos el componente de movimiento en 3D
         this.p.x = Math.floor(this.p.x)*2; // Atravesamos el espacio-tiempo
         Q.state.inc("stage");
         Q.Dialogue.play(2);
@@ -808,7 +872,14 @@ Q.Sprite.extend("Spaceship", {
       radar(this.p.x);
     //}
     //
-
+    if(this.has("mov3D")){
+      
+      if(this.p.m%10 == 0){
+        this.playFrame();
+        this.updateFrame();
+      }
+      this.updateSpeed();
+    }
     if(this.p.vx != 0 && this.p.m%16*60 == 0){
         Q.state.set("orbimeters", Math.trunc(130000 - this.p.x));
         var p = Q.state.get("player")
@@ -1240,7 +1311,6 @@ Q.component("asteroidField",{
     spawn: function(dt){
       this.p.t++;
       if(this.p.cont > 0){
-        console.log("Cont: " + this.p.cont);
         //var level = Q.state.get("stage");
         
         //var xlevel = Q.state.get("stages")[level];
@@ -1351,7 +1421,6 @@ Q.component("spawner3D", {
         //POSICIONAMIENTO
         var scale;
         var posX, posY;
-        console.log("Contador debris 3D: " + this.p.cont);
         // Escogemos un Debris al azar
         var debrisNum = Math.floor(Math.random() * 5) + 1;
         var debrisObj = Q.state.get('debris')[debrisNum];
