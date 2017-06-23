@@ -150,7 +150,7 @@ Q.Sprite.extend("Station", {
         collision.obj.play("arrive");
         collision.obj.animate({x: this.p.x, y: this.p.y + 30, scale: 0.2}, 2.5, {callback: function(){
           Q.Dialogue.play("win");
-          Q.stageScene("wingame", 6);
+          Q.stageScene("wingame", 0);
           this.destroy();
         }});
       }
@@ -427,7 +427,7 @@ Q.state.set({
         2: {x: 21000},
         3: {x: 84000}
       },
-      modoDios: "off",
+      modoDios: dios,
       audio: "off",
       difficulties: ['LOW', 'MEDIUM', 'HIGH'],
       difficulty: 0
@@ -574,7 +574,8 @@ Q.Sprite.extend("Spaceship", {
       z: zIndex,
       dimension: paramDim,
       stuck: false,
-      conversation: false
+      conversation: false,
+      damaged: false
     });
     this.add('2d, animation, tween');
     this.play("right");
@@ -609,6 +610,14 @@ Q.Sprite.extend("Spaceship", {
             this.useFuel(1);
           }
         }
+        else{
+          if(this.p.stuck){
+            var messages = Q.state.get("messages");
+            messages["1"].active = true;
+            Q.state.set("messages", messages);
+            this.die();
+          }
+        }
       }
     });
     Q.input.on("down", this, function(){
@@ -633,6 +642,14 @@ Q.Sprite.extend("Spaceship", {
             this.useFuel(1);
           }
         }
+        else{
+          if(this.p.stuck){
+            var messages = Q.state.get("messages");
+            messages["1"].active = true;
+            Q.state.set("messages", messages);
+            this.die();
+          }
+        }
       }
     });
     Q.input.on("left", this, function(){
@@ -655,6 +672,14 @@ Q.Sprite.extend("Spaceship", {
               this.p.vx = -320;
             }
             this.useFuel(1);
+          }
+        }
+        else{
+          if(this.p.stuck){
+            var messages = Q.state.get("messages");
+            messages["1"].active = true;
+            Q.state.set("messages", messages);
+            this.die();
           }
         }
       }
@@ -682,6 +707,14 @@ Q.Sprite.extend("Spaceship", {
             this.useFuel(1);       
           }
         }
+        else{
+          if(this.p.stuck){
+            var messages = Q.state.get("messages");
+            messages["1"].active = true;
+            Q.state.set("messages", messages);
+            this.die();
+          }
+        }
       }
     });
     // Cuando se dispara con SPACE, creamos una bala con la dirección correcta
@@ -705,7 +738,7 @@ Q.Sprite.extend("Spaceship", {
     Q.input.on("S", this, function(){
       console.log("x: " + this.p.x);
       console.log("y: " + this.p.y);
-      this.p.x = 123000;
+      Q.state.set("modoDios", "on");
     });
 
     //----------------MODO DIOS --------------- //
@@ -748,7 +781,7 @@ Q.Sprite.extend("Spaceship", {
     });
 
     // Actualizamos RADAR cada vez que ocurra un cambio en Q.state
-    Q.state.on("change", function(){
+    Q.state.on("change.orbimeters", function(){
         Q.stageScene("RADAR", 1);
     });
 
@@ -814,6 +847,9 @@ Q.Sprite.extend("Spaceship", {
 
   die: function(){
     this.destroy();
+    // Llamar a EndGame
+    Q.clearStages();
+    Q.stageScene("losegame", 0);
   },
 
   step: function(dt){
@@ -932,13 +968,14 @@ Q.Sprite.extend("Spaceship", {
         messages["2"].active = true;
         Q.state.set("messages", messages);
         this.destroy();
-        Q.stageScene("losegame", 6);
+        Q.stageScene("losegame", 0);
       }
     }
   },
   wreckShip: function(damage){
     var p = Q.state.get("player");
     p.shipHealth -= damage;
+    this.p.damaged = false;
     if(p.shipHealth <= 30){
       Q.Dialogue.play("ship_critical");
     }
@@ -948,9 +985,7 @@ Q.Sprite.extend("Spaceship", {
       messages["3"].active = true;
       Q.state.set("messages", messages);
       this.stage.insert(new Q.Explosion(this.p.x, this.p.y, 0.4, true));
-      this.destroy();
-      // Llamar a EndGame
-      Q.stageScene("losegame", 6);
+      this.die();
     }
     Q.state.set("player", p);
   },
@@ -962,12 +997,10 @@ Q.Sprite.extend("Spaceship", {
       Q.Dialogue.play("fuel_critical");
       // Comprobar v = 0 y EndGame
       if(this.p.stuck){
-        this.destroy();
         var messages = Q.state.get("messages");
         messages["1"].active = true;
         Q.state.set("messages", messages);
-        // Llamar a EndGame
-        Q.stageScene("losegame", 6);
+        this.die();
       }
     }
     this.p.stuck = false;
@@ -1143,7 +1176,7 @@ Q.component("reward", {
       if(collision.obj.isA("Spaceship")){
         // Distinguir entre tipos de Recompensa (oxígeno, combustible, reparar nave...)
         // Comparar que esté en 2D o en 3D (Comprobar escala)
-        if(this.entity.p.movType == "2D" || this.entity.p.movType == "Orbit" || (this.entity.p.movType == "3D" && this.entity.p.scale >= 1.1 && this.entity.p.scale <= 1.5)){
+        if(this.entity.p.movType == "2D" || this.entity.p.movType == "Orbit" || (this.entity.p.movType == "3D" && this.entity.p.scale >= 0.8 && this.entity.p.scale <= 1.3)){
           var p = Q.state.get("player");
           if(this.entity.p.name == "OxygenCharge"){
             p.oxygen += 5; // Reponemos oxígeno
@@ -1193,16 +1226,18 @@ Q.component("hostile", {
         }
         this.entity.destroy();
       }
-      else if (collision.obj.isA("Spaceship")){
+      else if (collision.obj.isA("Spaceship") && collision.obj.p.damaged == false){
         // Comparar que esté en 2D o en 3D (Comprobar escala)
+        
         if(this.entity.p.movType == "2D" || this.entity.p.movType == "Orbit" || (this.entity.p.movType == "3D" && this.entity.p.scale >= 1.1 && this.entity.p.scale <= 1.3)){
           this.entity.stage.insert(new Q.Explosion(this.entity.p.x, this.entity.p.y, 0.4, true));
           // Empeoramos el estado de la nave
+          collision.obj.p.damaged = true;
           if(this.entity.p.name == "meteorite"){
-            collision.obj.wreckShip(Math.floor(20 * this.entity.p.scale * Q.state.get("difficulty")));
+            collision.obj.wreckShip(Math.floor(10 * this.entity.p.scale * Q.state.get("difficulty")));
           }
           else if(this.entity.p.name == "satellite"){
-            collision.obj.wreckShip(10 * Q.state.get("difficulty")); 
+            collision.obj.wreckShip(5 * Q.state.get("difficulty")); 
           }
           this.entity.destroy();
         }      
@@ -1483,11 +1518,16 @@ Q.scene("HUD", function(stage){
   var n = Q.state.get("nPlanet");
   var planets = Q.state.get("planets");
   var planet = planets[n];
-  if(planet.g != 0){
-    var orbimeters = Q.state.get("orbimeters");
+  var orbimeters;
+  if(planet.g == 0){
+    orbimeters = "Failed to calculate";
+  }
+  else if (planet.g != 0){
+    orbimeters = Q.state.get("orbimeters");
     var textOrbimeters = new Q.UI.Text({family: "ethnocentric", x: Q.width - 30, y: 10, label: "Orbimeters to Station: " + orbimeters, color: "#FFDA6C", outlineWidth: 3, size: 14, align: "right"});
     stage.insert(textOrbimeters);
   }
+  
   
   // Datos de la nave
   var player = Q.state.get("player");
@@ -1537,7 +1577,7 @@ Q.load(["finalStation.png", "wingame.png", "losegame.png", "space_station1.png",
         Q.compileSheets("screw.png", "screw.json");
     //if(Q.state.get("audio") == "on")
       //Q.audio.play('interstellar.mp3',{ loop: true });
-    Q.stageScene("menu");
+    Q.stageScene("menu", 0);
     
     //Q.debug = true;
 });
@@ -1657,7 +1697,7 @@ Q.scene("Intro",function(stage) {
       orbimeters: 130000,
       distanceToRadius: 0,
       minDistanceX: 0,
-      modoDios: "off",
+      modoDios: dios,
       audio: "off",
       difficulties: ['LOW', 'MEDIUM', 'HIGH'],
       difficulty: 1,
@@ -1687,32 +1727,7 @@ Q.scene("Intro",function(stage) {
   });
 });
 
-Q.scene('endGame',function(stage) {
-  var container = stage.insert(new Q.UI.Container({
-    x: Q.width/2, y: Q.height/2, fill: "rgba(0,0,0,0.5)"
-  }));
-
-  var button = container.insert(new Q.UI.Button({ x: 0, y: 0, fill: "#CCCCCC",
-                                                  label: "Play Again" }));
-  var label = container.insert(new Q.UI.Text({x:5, y: -10 - button.p.h,
-                                                   label: stage.options.label, color: "#FFFFFF" }));
-  button.on("click",function() {
-    Q.clearStages();
-    Q.audio.stop();
-    //Q.state.reset({score: 0, Spaceship: " ", game: "playing", lifePoints: 5, hint: "Hint: find the power of the Gods"});
-    //Q.audio.play('music_main.mp3',{ loop: true });
-    Q.stageScene('level1', 0);
-    //Q.stageScene('playerScene', 3);
-    //Q.audio.play("interstellar.mp3", {loop: true});
-    Q.stageScene('HUD', 2);
-    Q.stageScene('RADAR', 3);
-  });
-
-
-  container.fit(20);
-});
-
-
+var dios = "off";
 Q.scene('menu', function(stage) {
 
   var fondo = stage.insert(new Q.Fondo("fondo.png"));
@@ -1732,7 +1747,7 @@ Q.scene('menu', function(stage) {
   var buttonLG = stage.insert(new Q.UI.Button({x: godLabel.p.x - 110, y: godLabel.p.y+15, w: 50, h: 50, asset:"leftarrow.png" }));
   var buttonRG = stage.insert(new Q.UI.Button({x: godLabel.p.x + 110, y: godLabel.p.y+15, w: 50, h: 50, asset:"rightarrow.png" }));
 
-  var enterText = stage.insert(new Q.UI.Button({x: Q.width/2+30, y: difLabel.p.y + 180, label: "Press ENTER to START", font: "ethnocentric", keyActionName: "confirm"}));
+  var enterText = stage.insert(new Q.UI.Button({x: Q.width/2+30, y: difLabel.p.y + 180, label: "Press ENTER to START", color: "#FFFFFF", font: "ethnocentric", keyActionName: "confirm"}));
 
   if (Q.state.get('audio') == 'off' && Q.state.get('modoDios') == 'off') {
     musicLabel.p.label = "OFF";
@@ -1815,7 +1830,7 @@ Q.scene('menu', function(stage) {
     }else {
       num = 0;
     }
-    Q.state.set('difficulty', num);
+    Q.state.set('difficulty', num+1);
     var text =  Q.state.get('difficulties')[num];
     difLabel.p.label = text;
   });
@@ -1824,6 +1839,7 @@ Q.scene('menu', function(stage) {
     var music = Q.state.get('audio');
     
     if (Q.state.get('modoDios') == 'on') {
+      dios = "off";
       Q.state.set('modoDios', "off");
       godLabel.p.label = "OFF";
       fondo.p.asset = "fondo.png";
@@ -1833,6 +1849,7 @@ Q.scene('menu', function(stage) {
       }
 
     } else {
+      dios = "on";
       Q.state.set('modoDios', "on");
       godLabel.p.label = "ON";
       fondo.p.asset = "fondo2.png";
@@ -1868,7 +1885,7 @@ Q.scene('menu', function(stage) {
 });
 
 Q.scene('wingame',function(stage) {
-  var fondo = stage.insert(new Q.Fondo("wingame.png",screen.width,screen.height));
+  var fondo = stage.insert(new Q.Fondo("fondo.png",screen.width,screen.height));
 
   var cont = stage.insert(new Q.UI.Container({ x: fondo.p.x-180, y: fondo.p.y-250, fill: 'rgba(0,0,0,0.5)' }));
 
@@ -1882,7 +1899,7 @@ Q.scene('wingame',function(stage) {
   var fuelLabel = cont.insert(new Q.UI.Text({x: cont.p.x/2-70,y: cont.p.y+60, label: "Fuel "+player.fuel+" %", family: "ethnocentric",color: "#000000", size: 25}));
   var blasterLabel = cont.insert(new Q.UI.Text({x: cont.p.x/2-70,y: cont.p.y+90, label: "Blaster "+player.blaster+" %", family: "ethnocentric",color: "#000000", size: 25}));
 
-  var enterText = stage.insert(new Q.UI.Button({x: screen.width/2+30, y: screen.height/2 + 180, label: "Press ENTER to go back to main MENU", font: "ethnocentric", keyActionName: "confirm"}));
+  var enterText = stage.insert(new Q.UI.Button({x: screen.width/2+30, y: screen.height/2 + 180, label: "Press ENTER to go back to main MENU", font: "ethnocentric", color: "#FFFFFF", keyActionName: "confirm"}));
 
   enterText.on("click",function() {
     Q.clearStages();
@@ -1894,11 +1911,11 @@ Q.scene('wingame',function(stage) {
 });
 
 Q.scene('losegame',function(stage) {
-  var fondo = stage.insert(new Q.Fondo("losegame.png",screen.width,screen.height));
-  var textLabel = stage.insert(new Q.UI.Text({x: screen.width/2+30,y: screen.height/2-350, label: "You Lose", family: "ethnocentric",color: "#FFFFFF", size: 70}));
+  var fondo = stage.insert(new Q.Fondo("fondo.png",screen.width,screen.height));
+  var textLabel = stage.insert(new Q.UI.Text({x: screen.width/2+30,y: screen.height/2-130, label: "You Lose", family: "ethnocentric",color: "#FFFFFF", size: 40}));
   var msg = Q.state.get('messages');
   var numMsgs = Object.keys(msg).length;
-  var posY = screen.height/2-200;
+  var posY = Q.height/2;
   var textLabel;
   var i;
   var m;
@@ -1906,15 +1923,15 @@ Q.scene('losegame',function(stage) {
     m = msg[i];
     if(m.active){
       textLabel = stage.insert(new Q.UI.Text({x: screen.width/2+30,y: posY, label: m.msg, family: "ethnocentric",color: "#FFFFFF", size: 25}));
-      posY = posY +50;
+      posY = posY + 80;
     }
   }
 
-  var enterText = stage.insert(new Q.UI.Button({x: screen.width/2+30, y: screen.height/2 + 180, label: "Press ENTER to RESTART", font: "ethnocentric", keyActionName: "confirm"}));
+  var enterText = stage.insert(new Q.UI.Button({x: screen.width/2+30, y: screen.height/2 + 180, label: "Press ENTER to go back to main MENU", color: "#FFFFFF", font: "ethnocentric", keyActionName: "confirm"}));
 
   enterText.on("click",function() {
     Q.clearStages();
-    Q.stageScene('Intro', 0);
+    Q.stageScene('menu', 0);
     Q.audio.stop();
     if(Q.state.get("audio") == "on")
       Q.audio.play("interstellar.mp3", {loop: true});
