@@ -1838,11 +1838,11 @@ Q.scene('menu', function(stage) {
 });
 
 Q.scene('wingame',function(stage) {
-  var fondo = stage.insert(new Q.Fondo("fondo.png",screen.width,screen.height));
+  var fondo = stage.insert(new Q.Fondo("fondo.png"));
 
   var cont = stage.insert(new Q.UI.Container({ x: fondo.p.x-180, y: fondo.p.y-250, fill: 'rgba(0,0,0,0.5)' }));
 
-  var textLabel = stage.insert(new Q.UI.Text({x: screen.width/2 + 30,y: screen.height/2-250, label: "You Win", family: "ethnocentric",color: "#FFFFFF", size: 70}));
+  var textLabel = stage.insert(new Q.UI.Text({x: Q.width/2 + 30,y: Q.height/2-250, label: "You Win", family: "ethnocentric",color: "#FFFFFF", size: 70}));
 
   var player = Q.state.get('player');
 
@@ -1852,7 +1852,7 @@ Q.scene('wingame',function(stage) {
   var fuelLabel = cont.insert(new Q.UI.Text({x: cont.p.x/2-70,y: cont.p.y+60, label: "Fuel "+player.fuel+" %", family: "ethnocentric",color: "#000000", size: 25}));
   var blasterLabel = cont.insert(new Q.UI.Text({x: cont.p.x/2-70,y: cont.p.y+90, label: "Blaster "+player.blaster+" %", family: "ethnocentric",color: "#000000", size: 25}));
 
-  var enterText = stage.insert(new Q.UI.Button({x: screen.width/2+30, y: screen.height/2 + 180, label: "Press ENTER to go back to main MENU", font: "ethnocentric", color: "#FFFFFF", keyActionName: "confirm"}));
+  var enterText = stage.insert(new Q.UI.Button({x: Q.width/2+30, y: Q.height/2 + 180, label: "Press ENTER to go back to main MENU", font: "ethnocentric", color: "#FFFFFF", keyActionName: "confirm"}));
 
   enterText.on("click",function() {
     Q.clearStages();
@@ -1864,8 +1864,8 @@ Q.scene('wingame',function(stage) {
 });
 
 Q.scene('losegame',function(stage) {
-  var fondo = stage.insert(new Q.Fondo("fondo.png",screen.width,screen.height));
-  var textLabel = stage.insert(new Q.UI.Text({x: screen.width/2+30,y: screen.height/2-130, label: "You Lose", family: "ethnocentric",color: "#FFFFFF", size: 40}));
+  var fondo = stage.insert(new Q.Fondo("fondo.png",Q.width,Q.height));
+  var textLabel = stage.insert(new Q.UI.Text({x: Q.width/2+30,y: Q.height/2-130, label: "You Lose", family: "ethnocentric",color: "#FFFFFF", size: 40}));
   var msg = Q.state.get('messages');
   var numMsgs = Object.keys(msg).length;
   var posY = Q.height/2;
@@ -1875,12 +1875,12 @@ Q.scene('losegame',function(stage) {
   for(i=1; i<=numMsgs; i++){
     m = msg[i];
     if(m.active){
-      textLabel = stage.insert(new Q.UI.Text({x: screen.width/2+30,y: posY, label: m.msg, family: "ethnocentric",color: "#FFFFFF", size: 25}));
+      textLabel = stage.insert(new Q.UI.Text({x: Q.width/2+30,y: posY, label: m.msg, family: "ethnocentric",color: "#FFFFFF", size: 25}));
       posY = posY + 80;
     }
   }
 
-  var enterText = stage.insert(new Q.UI.Button({x: screen.width/2+30, y: screen.height/2 + 180, label: "Press ENTER to go back to main MENU", color: "#FFFFFF", font: "ethnocentric", keyActionName: "confirm"}));
+  var enterText = stage.insert(new Q.UI.Button({x: Q.width/2+30, y: Q.height/2 + 180, label: "Press ENTER to go back to main MENU", color: "#FFFFFF", font: "ethnocentric", keyActionName: "confirm"}));
 
   enterText.on("click",function() {
     Q.clearStages();
