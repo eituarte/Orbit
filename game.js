@@ -1605,7 +1605,6 @@ Q.scene("level1",function(stage) {
 
 Q.scene("Intro",function(stage) {
 
-  // A los 2 segundos, comienza el diálogo
   Q.Dialogue.play("1");
 
   if (config.audio) {
@@ -1771,11 +1770,21 @@ Q.scene('menu', function(stage) {
   buttonLM.on("click", function() {
     config.audio = !config.audio;
     musicLabel.p.label = (config.audio) ? "ON" : "OFF";
+    if (config.god && config.audio) {
+      Q.audio.play('godmode.mp3',{ loop: true });
+    } else {  
+      Q.audio.stop();
+    }
   });
 
   buttonRM.on("click",function() {
     config.audio = !config.audio;
     musicLabel.p.label = (config.audio) ? "ON" : "OFF";
+    if (config.god && config.audio) {
+      Q.audio.play('godmode.mp3',{ loop: true });
+    } else {  
+      Q.audio.stop();
+    }
   });
 
   buttonLL.on("click",function() {
@@ -1806,8 +1815,8 @@ Q.scene('menu', function(stage) {
     config.god = !config.god;
     godLabel.p.label = (config.god) ? "ON" : "OFF";
     if (config.god) {
-      Q.audio.play('godmode.mp3',{ loop: true });
       fondo.p.asset = "fondo2.png";
+      if (config.audio) Q.audio.play('godmode.mp3',{ loop: true });
     } else {  
       Q.audio.stop();
       fondo.p.asset = "fondo.png";
@@ -1818,8 +1827,8 @@ Q.scene('menu', function(stage) {
     config.god = !config.god;
     godLabel.p.label = (config.god) ? "ON" : "OFF";
     if (config.god) {
-      Q.audio.play('godmode.mp3',{ loop: true });
       fondo.p.asset = "fondo2.png";
+      if (config.audio) Q.audio.play('godmode.mp3',{ loop: true });
     } else {  
       Q.audio.stop();
       fondo.p.asset = "fondo.png";
