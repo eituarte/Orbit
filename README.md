@@ -72,10 +72,11 @@ see more info about this engine at these links:
 
 
 ## Sources and References
--Assets
+Assets
+* [Help icon](http://www.freeiconspng.com/uploads/help-icon-12.png)
+* [Credits icon](https://cdn2.iconfinder.com/data/icons/app-types-in-grey/512/info_512pxGREY.png)
 
-
--Games
+Games
 * [Orbit](https://play.google.com/store/apps/details?id=com.ChetanSurpur.Orbit&hl=es)
 * [Gravity Guy](https://play.google.com/store/apps/details?id=com.miniclip.gravityguy&hl=es)
 * [Satalaunch](https://appadvice.com/app/satalaunch/420814059 )
