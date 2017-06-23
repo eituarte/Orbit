@@ -907,7 +907,7 @@ Q.Sprite.extend("Spaceship", {
     if(this.p.vx != 0 && this.p.m%16*60 == 0){
         Q.state.set("orbimeters", Math.trunc(130000 - this.p.x));
         var p = Q.state.get("player")
-        p.blaster +=1;
+        if (Q.state.get("difficulty") == 1) p.blaster +=1;
         if(p.blaster >= 100){ // El blaster se regenera con la velocidad de la nave, usando la energía estelar fotovoltaica
           p.blaster = 100;
         }
