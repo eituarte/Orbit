@@ -9,6 +9,51 @@
 
  ## Diseño del juego
  
+ a
+ a
+ a
+ a
+ a
+ a
+ a
+ a
+ a
+ a
+ a
+ a
+ a
+ a
+ a
+ a
+ a
+ a
+ a
+ a
+ a
+ a
+ a
+ a
+ a
+ a
+ a
+ a
+ a
+ a
+ a
+ a
+ a
+ a
+ a
+ a
+ aaaa
+ a
+ a
+ a
+ a
+ a
+ a
+ 
+ 
  ### Objetivo del juego
  
  ### Principales mecánicas
