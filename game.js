@@ -436,7 +436,24 @@ Q.state.set({
       godMode: config.god,
       audio: config.audio,
       difficulties: ['LOW', 'MEDIUM', 'HIGH'],
-      difficulty: config.difficulty
+      difficulty: config.difficulty,
+      helpMsg: {
+        1: {
+          msg: 'Pulsa [1] para teletransportar al principio',
+        },
+        2:{
+          msg: 'Pulsa [2] para teletransportar antes del primer agujero negro',
+        },
+        3:{
+          msg: 'Pulsa [3] para teletransportar antes del segundo agujero negro',
+        },
+        4:{
+          msg: 'Pulsa [4] para teletransportar después del segundo agujero negro',
+        },
+        5:{
+          msg: 'Pulsa [5] para teletransportar antes de la estación espacial',
+        }
+      }
   });
 
 // Función que se llama en el step de Spaceship para ver si hay astros cercanos
@@ -745,6 +762,14 @@ Q.Sprite.extend("Spaceship", {
       Q.state.set("godMode", true);
     });
 
+    Q.input.on("H", this, function(){
+      Q.stageScene('Help', 1200);
+    });
+
+    Q.input.on("Q", this, function(){
+      Q.clearStage(1200);
+    });
+
     //----------------MODO GOD --------------- //
 
     Q.input.on("ONE", this, function(){
@@ -754,35 +779,42 @@ Q.Sprite.extend("Spaceship", {
         // Configurar contadores de debrisSpawner y conversaciones correctamente
       }
     });
+
     Q.input.on("TWO", this, function(){
       if(Q.state.get("godMode")){
         Q.state.set("level", 2);
         this.p.x = 21000;
       }
     });
+
     Q.input.on("THREE", this, function(){
       if(Q.state.get("godMode")){
         Q.state.set("level", 3);
         this.p.x = 84000;
       }
     });
+
     Q.input.on("FOUR", this, function(){
       if(Q.state.get("godMode")){
         this.p.x = 9000;
       }
     });
+
     Q.input.on("FIVE", this, function(){
       if(Q.state.get("godMode")){
         this.p.x = 41000;
         Q.state.set("level", 2);
       }
     });
+
     Q.input.on("EIGHT", this, function(){
       Q.state.set("audio", true);
     });
+
     Q.input.on("NINE", this, function(){
       Q.state.set("audio", false);
     });
+
 
     // Actualizamos RADAR cada vez que ocurra un cambio en Q.state
     Q.state.on("change.orbimeters", function(){
@@ -1042,7 +1074,7 @@ Q.Sprite.extend("Bullet", {
       }else{
         this.p.x -= dt*this.p.vx;
       }
-      if(this.p.y < 0 || this.p.y>screen.height){
+      if(this.p.y < 0 || this.p.y>Q.height){
         this.destroy();
       }
     }
@@ -1139,7 +1171,7 @@ Q.component("debris2D", {
       this.p.y += dt* this.p.vy;
 
       this.play("far_away");
-      if(this.p.y < 0 || this.p.y>screen.height){ // Si se sale de la pantalla, lo eliminamos
+      if(this.p.y < 0 || this.p.y>Q.height){ // Si se sale de la pantalla, lo eliminamos
         this.destroy();
       }
     }
@@ -1169,7 +1201,7 @@ Q.component("debris3D", {
       if(this.p.scale >= 1.1 && this.p.scale <= 1.3){
         this.play("close_by");
       }
-      if(this.p.y < 0 || this.p.y>screen.height){ // Si se sale de la pantalla, lo eliminamos
+      if(this.p.y < 0 || this.p.y>Q.height){ // Si se sale de la pantalla, lo eliminamos
         this.destroy();
       }
     }
@@ -1322,7 +1354,7 @@ Q.component("asteroidField",{
         if(this.p.x < 30000){ // Si es un campo de asteroides
           // Crear meteoritos a partir de la posición y del player, y en un rango de posiciones x
 
-          y = Math.floor(this.p.play.p.y) + Math.floor((Math.random() * 2 - 1)*screen.height/2);
+          y = Math.floor(this.p.play.p.y) + Math.floor((Math.random() * 2 - 1)*Q.height/2);
           debris = new Q.Debris(x, y, "meteorite" , "debris1", rand, 4, "2D", "Hostile", null);
           this.stage.insert(debris);
           this.p.cont--;
@@ -1385,8 +1417,8 @@ Q.component("spawner2D", {
           // Escogemos un Debris al azar
           var debrisNum = Math.floor(Math.random() * 5) + 1;
           var debrisObj = Q.state.get('debris')[debrisNum];
-          posX = this.p.play.p.x + screen.width/2;
-          posY = this.p.play.p.y + (Math.random() * 2 - 1)*screen.height/3;
+          posX = this.p.play.p.x + Q.width/2;
+          posY = this.p.play.p.y + (Math.random() * 2 - 1)*Q.height/3;
           // paramX, paramY, paramName, paramSheet, paramScale, zIndex, paramMovType, paramType
           Q.stage().insert(new Q.Debris(posX, posY, debrisObj.name , debrisObj.sheet, debrisObj.scale, 4, this.p.movType, debrisObj.type));
           //this.p.cont--;
@@ -1565,7 +1597,7 @@ Q.scene("HUD", function(stage){
 
 });
 
-Q.load(["finalStation.png", "wingame.png", "losegame.png", "space_station1.png", "space_station2.png", "space_station3.png", "explosion.json","explosion.png", "Starship_Pilot.png", "Space_Captain.png", "Space_Commander.png", "fireAux.mp3","explosion.mp3", "interstellar.mp3", "godmode.mp3", "spaceship.png", "spaceship.json", "1.png","2.png", "3.png","4.png","5.png","6.png","7.png",
+Q.load(["credits.png","help.png","finalStation.png", "wingame.png", "losegame.png", "space_station1.png", "space_station2.png", "space_station3.png", "explosion.json","explosion.png", "Starship_Pilot.png", "Space_Captain.png", "Space_Commander.png", "fireAux.mp3","explosion.mp3", "interstellar.mp3", "godmode.mp3", "spaceship.png", "spaceship.json", "1.png","2.png", "3.png","4.png","5.png","6.png","7.png",
   "8.png","blackhole.png", "quarterStarfield.png", "Space_Android.png",
   "quarterStarfield2.png", "vortex.png", "wormhole.png",
   "interiorCircularInfluence.png", "exteriorCircularInfluence.png",
@@ -1637,7 +1669,7 @@ Q.scene("Intro",function(stage) {
       s3.animate({opacity: 0}, 2);
   }, 50000);
 
-  var button = stage.insert(new Q.UI.Button({x: screen.width/2, y: screen.height/2,fill: "#CCCCCC", w: screen.width, h: screen.height, asset: "bgProst.png"}));
+  var button = stage.insert(new Q.UI.Button({x: Q.width/2, y: Q.height/2,fill: "#CCCCCC", w: Q.width, h: Q.height, asset: "bgProst.png"}));
 
   var s2 = stage.insert(new Q.Station(Q.width/2, Q.height/2, "space_station2.png"));
   var s1 = stage.insert(new Q.Station(Q.width/2, Q.height/2, "space_station1.png"));
@@ -1723,6 +1755,23 @@ Q.scene("Intro",function(stage) {
           msg: 'Your ship blew up',
           active: false
         }
+      },
+      helpMsg: {
+        1: {
+          msg: 'Pulsa [1] para teletransportar al principio',
+        },
+        2:{
+          msg: 'Pulsa [2] para teletransportar antes del primer agujero negro',
+        },
+        3:{
+          msg: 'Pulsa [3] para teletransportar antes del segundo agujero negro',
+        },
+        4:{
+          msg: 'Pulsa [4] para teletransportar después del segundo agujero negro',
+        },
+        5:{
+          msg: 'Pulsa [5] para teletransportar antes de la estación espacial',
+        }
       }
     });
 
@@ -1754,6 +1803,9 @@ Q.scene('menu', function(stage) {
   var buttonLG = stage.insert(new Q.UI.Button({x: godLabel.p.x - 110, y: godLabel.p.y+15, w: 50, h: 50, asset:"leftarrow.png" }));
   var buttonRG = stage.insert(new Q.UI.Button({x: godLabel.p.x + 110, y: godLabel.p.y+15, w: 50, h: 50, asset:"rightarrow.png" }));
 
+  var buttonHelp = stage.insert(new Q.UI.Button({x: 50, y: 50, w: 50, h: 50, asset:"help.png" }));
+  var buttonCredits = stage.insert(new Q.UI.Button({x: Q.width -50, y: 50, w: 50, h: 50, asset:"credits.png" }));
+
   var enterText = stage.insert(new Q.UI.Button({x: Q.width/2+30, y: difLabel.p.y + 180, label: "Press ENTER to START", color: "#FFFFFF", font: "ethnocentric", keyActionName: "confirm"}));
 
 
@@ -1767,12 +1819,20 @@ Q.scene('menu', function(stage) {
     Q.stageScene('Intro', 0);
   });
 
+  buttonHelp.on("click", function() {
+      Q.stageScene('Help', 1);
+  });
+
+  buttonCredits.on("click", function(){
+    Q.stageScene('About', 1);
+  });
+
   buttonLM.on("click", function() {
     config.audio = !config.audio;
     musicLabel.p.label = (config.audio) ? "ON" : "OFF";
     if (config.god && config.audio) {
       Q.audio.play('godmode.mp3',{ loop: true });
-    } else {  
+    } else {
       Q.audio.stop();
     }
   });
@@ -1782,7 +1842,7 @@ Q.scene('menu', function(stage) {
     musicLabel.p.label = (config.audio) ? "ON" : "OFF";
     if (config.god && config.audio) {
       Q.audio.play('godmode.mp3',{ loop: true });
-    } else {  
+    } else {
       Q.audio.stop();
     }
   });
@@ -1817,7 +1877,7 @@ Q.scene('menu', function(stage) {
     if (config.god) {
       fondo.p.asset = "fondo2.png";
       if (config.audio) Q.audio.play('godmode.mp3',{ loop: true });
-    } else {  
+    } else {
       Q.audio.stop();
       fondo.p.asset = "fondo.png";
     }
@@ -1829,13 +1889,68 @@ Q.scene('menu', function(stage) {
     if (config.god) {
       fondo.p.asset = "fondo2.png";
       if (config.audio) Q.audio.play('godmode.mp3',{ loop: true });
-    } else {  
+    } else {
       Q.audio.stop();
       fondo.p.asset = "fondo.png";
     }
   });
 
 });
+
+Q.scene('Help',function(stage) {
+
+  var container = stage.insert(new Q.UI.Container({
+      fill: "rgba(130, 84, 164, 0.9)",
+      border: 2,
+      y: -Q.height/2 + 100,
+      x: Q.width/2
+    }));
+
+    var label1 = container.insert(new Q.UI.Text({x:0, y: Q.height/2 + 20, label: "HELP", color: "#FFFFFF" , family:"ethnocentric", size: 50}));
+    var label2 = container.insert(new Q.UI.Text({x:0, y: Q.height/2 + 100, label: "God Mode", color: "#FFFFFF", family:"ethnocentric", size: 30}));
+    var hmsgs = Q.state.get('helpMsg');
+    var numMsgs = Object.keys(hmsgs).length;
+    var i;
+    var labelMH;
+    var posY = Q.height/2 + 180;
+    var textMH;
+    for(i=1; i<=numMsgs; i++){
+      labelMH = container.insert(new Q.UI.Text({x:0, y: posY, label: hmsgs[i].msg, color: "#FFFFFF", family:"ethnocentric", size: 20}));
+      posY += 50;
+    }
+
+    var button = container.insert(new Q.UI.Button({ x: 0, y: posY + 50, fill: '#CCCCCC', label: 'EXIT', font: "ethnocentric"}))
+
+    button.on('click',function() {
+      Q.clearStage(1);
+    });
+
+    container.fit(20);
+  });
+
+Q.scene('About',function(stage) {
+
+  var container = stage.insert(new Q.UI.Container({
+      fill: "rgba(30, 57, 117, 0.9)",
+      border: 2,
+      y: -Q.height/4,
+      x: Q.width/2
+    }));
+
+    var label1 = container.insert(new Q.UI.Text({x:0, y: Q.height/2 + 20, label: "Credits", color: "#FFFFFF" , family:"ethnocentric", size: 50}));
+    var label2 = container.insert(new Q.UI.Text({x:0, y: Q.height/2 + 170, label: "Members", color: "#FFFFFF", family:"ethnocentric", size: 30}));
+    var label3 = container.insert(new Q.UI.Text({x:0, y: Q.height/2 + 220, label: "Enrique Ituarte Martínez-Millán", color: "#FFFFFF", family:"ethnocentric", size: 20}));
+    var label4 = container.insert(new Q.UI.Text({x:0, y: Q.height/2 + 260, label: "Carlos López Martínez", color: "#FFFFFF", family:"ethnocentric", size: 20}));
+    var label4 = container.insert(new Q.UI.Text({x:0, y: Q.height/2 + 300, label: "Javier López de Lerma", color: "#FFFFFF", family:"ethnocentric", size: 20}));
+
+    var button = container.insert(new Q.UI.Button({ x: 0, y: Q.height/2 + 400, fill: '#CCCCCC', label: 'EXIT',  font: "ethnocentric"}))
+
+    button.on('click',function() {
+      Q.clearStage(1);
+    });
+
+    container.fit(20);
+  });
 
 Q.scene('wingame',function(stage) {
   var fondo = stage.insert(new Q.Fondo("fondo.png"));
