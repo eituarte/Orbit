@@ -1601,10 +1601,9 @@ Q.load(["credits.png","help.png","finalStation.png", "wingame.png", "losegame.pn
   "8.png","blackhole.png", "quarterStarfield.png", "Space_Android.png",
   "quarterStarfield2.png", "vortex.png", "wormhole.png",
   "interiorCircularInfluence.png", "exteriorCircularInfluence.png",
-  "Spaceship.png", "Spaceship.json", "spaceship_pro.json", "spaceship_sheet_min.png",
+  "spaceship_pro.json", "spaceship_sheet_min.png",
   "bgProst.png", "fondo.png", "fondo2.png", "debris1.png",
   "debris2.png", "debris1.json", "debris2.json", "bullet.png","screw.png", "screw.json", "fuel.png", "fuel.json", "oxygen.png", "oxygen.json", "leftarrow.png", "rightarrow.png"], function(){
-        //Q.compileSheets("Spaceship.png", "Spaceship.json");
         Q.compileSheets("spaceship_sheet_min.png", "spaceship_pro.json");
         Q.compileSheets("spaceship.png", "spaceship.json");
         Q.compileSheets("explosion.png", "explosion.json");
