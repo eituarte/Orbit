@@ -3,7 +3,7 @@ var game = function() {
 // Set up an instance of the Quintus engine  and include
 // the Sprites, Scenes, Input and 2D module. The 2D module
 // includes the `TileLayer` class as well as the `2d` componet.
-var Q = window.Q = Quintus({ audioSupported: [ 'mp3', 'ogg' ] })
+var Q = window.Q = Quintus({ augodupported: [ 'mp3', 'ogg' ] })
         .include("Sprites, Scenes, Input, 2D, Anim, Touch, UI, TMX, Audio, Dialogue").enableSound()
         // Maximize this game to whatever the size of the browser is
         .setup({ maximize: true })
@@ -95,9 +95,9 @@ Q.animations("debris_anim", {
 });
 
 var config = {
-  audio: "on",
+  audio: true,
   difficulty: 1,
-  dios: "off"
+  god: false
 }
 
 // Objeto explosión (usada en la Intro)
@@ -126,7 +126,7 @@ Q.Sprite.extend("Explosion", {
     else{
       this.play("explode_and_fire");
     }
-    if(Q.state.get("audio") == "on")
+    if(Q.state.get("audio"))
       Q.audio.play("explosion.mp3");
   },
   end: function(){
@@ -433,7 +433,7 @@ Q.state.set({
         2: {x: 21000},
         3: {x: 84000}
       },
-      modoDios: config.dios,
+      godMode: config.god,
       audio: config.audio,
       difficulties: ['LOW', 'MEDIUM', 'HIGH'],
       difficulty: config.difficulty
@@ -729,7 +729,7 @@ Q.Sprite.extend("Spaceship", {
         if(p.blaster > 0){
           p.blaster -= 5;
           Q.stage().insert(new Q.Bullet(this.p.x + offsetX, this.p.y + 8, this.p.dir , this.p.x, this.p.y));
-          if(Q.state.get("audio") == "on")
+          if(Q.state.get("audio"))
             Q.audio.play("fireAux.mp3"); // Reproducimos audio de blaster
         }
         if(p.blaster <= 0)
@@ -742,46 +742,46 @@ Q.Sprite.extend("Spaceship", {
     Q.input.on("S", this, function(){
       console.log("x: " + this.p.x);
       console.log("y: " + this.p.y);
-      Q.state.set("modoDios", "on");
+      Q.state.set("godMode", true);
     });
 
-    //----------------MODO DIOS --------------- //
+    //----------------MODO GOD --------------- //
 
     Q.input.on("ONE", this, function(){
-      if(Q.state.get("modoDios") == "on"){
+      if(Q.state.get("godMode")){
         Q.state.set("level", 1);
         this.p.x = 200;
         // Configurar contadores de debrisSpawner y conversaciones correctamente
       }
     });
     Q.input.on("TWO", this, function(){
-      if(Q.state.get("modoDios") == "on"){
+      if(Q.state.get("godMode")){
         Q.state.set("level", 2);
         this.p.x = 21000;
       }
     });
     Q.input.on("THREE", this, function(){
-      if(Q.state.get("modoDios") == "on"){
+      if(Q.state.get("godMode")){
         Q.state.set("level", 3);
         this.p.x = 84000;
       }
     });
     Q.input.on("FOUR", this, function(){
-      if(Q.state.get("modoDios") == "on"){
+      if(Q.state.get("godMode")){
         this.p.x = 9000;
       }
     });
     Q.input.on("FIVE", this, function(){
-      if(Q.state.get("modoDios") == "on"){
+      if(Q.state.get("godMode")){
         this.p.x = 41000;
         Q.state.set("level", 2);
       }
     });
     Q.input.on("EIGHT", this, function(){
-      Q.state.set("audio", "on");
+      Q.state.set("audio", true);
     });
     Q.input.on("NINE", this, function(){
-      Q.state.set("audio", "off");
+      Q.state.set("audio", false);
     });
 
     // Actualizamos RADAR cada vez que ocurra un cambio en Q.state
@@ -800,6 +800,8 @@ Q.Sprite.extend("Spaceship", {
         this.animate({x: collision.obj.p.x, y: collision.obj.p.y + 80}, 5, {callback: function(){
           // Cambiamos el modo de juego a 3D
           //Q.state.set("dim", "3D");
+          this.refreshMatrix();
+          this.size(true);
           this.add("mov3D"); // Añadimos el componente de movimiento en 3D
 
         }});
@@ -1583,7 +1585,7 @@ Q.load(["finalStation.png", "wingame.png", "losegame.png", "space_station1.png",
       //Q.audio.play('interstellar.mp3',{ loop: true });
     Q.stageScene("menu", 0);
 
-    //Q.debug = true;
+    Q.debug = true;
 });
 
 
@@ -1605,6 +1607,10 @@ Q.scene("Intro",function(stage) {
 
   // A los 2 segundos, comienza el diálogo
   Q.Dialogue.play("1");
+
+  if (config.audio) {
+    Q.audio.play("interstellar.mp3", {loop: true});
+  }
 
   var s1, s2, s3;
 
@@ -1701,7 +1707,7 @@ Q.scene("Intro",function(stage) {
       orbimeters: 130000,
       distanceToRadius: 0,
       minDistanceX: 0,
-      modoDios: config.dios,
+      godMode: config.god,
       audio: config.audio,
       difficulties: ['LOW', 'MEDIUM', 'HIGH'],
       difficulty: config.difficulty,
@@ -1752,54 +1758,24 @@ Q.scene('menu', function(stage) {
   var enterText = stage.insert(new Q.UI.Button({x: Q.width/2+30, y: difLabel.p.y + 180, label: "Press ENTER to START", color: "#FFFFFF", font: "ethnocentric", keyActionName: "confirm"}));
 
 
-  musicLabel.p.label = Q.state.get('audio').toUpperCase();
-  if(musicLabel.p.label == "ON"){
-    Q.audio.play("interstellar.mp3", {loop: true});
-  }
-  godLabel.p.label = Q.state.get('modoDios').toUpperCase();
+  musicLabel.p.label = Q.state.get('audio') ? "ON" : "OFF";
+  godLabel.p.label = (Q.state.get('godMode')) ? "ON" : "OFF";
   difLabel.p.label = Q.state.get('difficulties')[Q.state.get('difficulty')-1];
 
 
   enterText.on("click",function() {
+    Q.audio.stop();
     Q.stageScene('Intro', 0);
-    //if(Q.state.get("audio") == "on")
-      //Q.audio.play("interstellar.mp3", {loop: true});
   });
 
   buttonLM.on("click", function() {
-    var music = config.audio;
-    if(music == 'on'){
-      config.audio = "off";
-      Q.audio.stop();
-      musicLabel.p.label = "OFF";
-
-    } else {
-      if (config.dios == 'on') {
-        Q.audio.play('godmode.mp3',{ loop: true });
-      } else {
-        Q.audio.play('interstellar.mp3',{ loop: true });
-      }
-      config.audio = "on";
-      musicLabel.p.label = "ON";
-    }
+    config.audio = !config.audio;
+    musicLabel.p.label = (config.audio) ? "ON" : "OFF";
   });
 
   buttonRM.on("click",function() {
-    var music = config.audio;
-    if(music == 'on'){
-        config.audio = "off";
-        Q.audio.stop();
-        musicLabel.p.label = "OFF";
-
-    } else {
-      if (config.dios == 'on') {
-        Q.audio.play('godmode.mp3',{ loop: true });
-      } else {
-        Q.audio.play('interstellar.mp3',{ loop: true });
-      }
-      config.audio = "on";
-      musicLabel.p.label = "ON";
-    }
+    config.audio = !config.audio;
+    musicLabel.p.label = (config.audio) ? "ON" : "OFF";
   });
 
   buttonLL.on("click",function() {
@@ -1810,8 +1786,8 @@ Q.scene('menu', function(stage) {
       num = 3;
     }
     config.difficulty = num;
-      var text =  Q.state.get('difficulties')[num-1];
-      difLabel.p.label = text;
+    var text =  Q.state.get('difficulties')[num-1];
+    difLabel.p.label = text;
   });
 
   buttonRL.on("click",function() {
@@ -1826,50 +1802,27 @@ Q.scene('menu', function(stage) {
     difLabel.p.label = text;
   });
 
-  buttonLG.on("click",function() {
-    var music = Q.state.get('audio');
-
-    if (Q.state.get('modoDios') == 'on') {
-      config.dios = "off";
-      Q.state.set('modoDios', "off");
-      godLabel.p.label = "OFF";
-      fondo.p.asset = "fondo.png";
-      if(music == 'on'){
-        Q.audio.stop();
-        Q.audio.play('interstellar.mp3',{ loop: true });
-      }
-
-    } else {
-      config.dios = "on";
-      Q.state.set('modoDios', "on");
-      godLabel.p.label = "ON";
+  buttonLG.on("click", function() {
+    config.god = !config.god;
+    godLabel.p.label = (config.god) ? "ON" : "OFF";
+    if (config.god) {
+      Q.audio.play('godmode.mp3',{ loop: true });
       fondo.p.asset = "fondo2.png";
-      if(music == 'on'){
-        Q.audio.stop();
-        Q.audio.play('godmode.mp3',{ loop: true });
-      }
+    } else {  
+      Q.audio.stop();
+      fondo.p.asset = "fondo.png";
     }
   });
 
-  buttonRG.on("click",function() {
-    var music = config.audio;
-    if (config.dios == 'on') {
-      config.dios = "off";
-      godLabel.p.label = "OFF";
-      fondo.p.asset = "fondo.png";
-      if(music == 'on'){
-        Q.audio.stop();
-        Q.audio.play('interstellar.mp3',{ loop: true });
-      }
-
-    } else {
-      config.dios = "on";
-      godLabel.p.label = "ON";
+  buttonRG.on("click", function() {
+    config.god = !config.god;
+    godLabel.p.label = (config.god) ? "ON" : "OFF";
+    if (config.god) {
+      Q.audio.play('godmode.mp3',{ loop: true });
       fondo.p.asset = "fondo2.png";
-      if(music == 'on'){
-        Q.audio.stop();
-        Q.audio.play('godmode.mp3',{ loop: true });
-      }
+    } else {  
+      Q.audio.stop();
+      fondo.p.asset = "fondo.png";
     }
   });
 
@@ -1896,7 +1849,7 @@ Q.scene('wingame',function(stage) {
     Q.clearStages();
     Q.stageScene('menu', 0);
     Q.audio.stop();
-    if(Q.state.get("audio") == "on")
+    if(Q.state.get("audio"))
       Q.audio.play("interstellar.mp3", {loop: true});
   });
 });
@@ -1924,7 +1877,7 @@ Q.scene('losegame',function(stage) {
     Q.clearStages();
     Q.stageScene('menu', 0);
     Q.audio.stop();
-    if(Q.state.get("audio") == "on")
+    if(Q.state.get("audio"))
       Q.audio.play("interstellar.mp3", {loop: true});
   });
 });
