@@ -128,16 +128,16 @@ We set out very early. Javier started out with the implementation of Q.Dialogue.
 
 ## Work distribution
 
-* Javier López: 28%
+* Javier López: 30%
 * Carlos López: 34%
-* Enrique Ituarte: 38%
+* Enrique Ituarte: 36%
 
 
 ## Sources and References
 Assets
 * All main graphics have been designed or edited by Enrique Ituarte.
-* [Justin Nichols] (https://opengameart.org/users/justin-nichol)
-* [angryfly3d] (https://sketchfab.com/angryfly3d)
+* [Justin Nichols](https://opengameart.org/users/justin-nichol)
+* [angryfly3d](https://sketchfab.com/angryfly3d)
 * [Help icon](http://www.freeiconspng.com/uploads/help-icon-12.png)
 * [Credits icon](https://cdn2.iconfinder.com/data/icons/app-types-in-grey/512/info_512pxGREY.png)
 
